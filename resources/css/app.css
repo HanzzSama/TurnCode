@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global: disable text selection & image dragging for app-like feel */
+*,
+*::before,
+*::after {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Allow text selection inside form inputs and textareas */
+input,
+textarea,
+[contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+/* Prevent image dragging globally */
+img {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+}
+/* CIRCLE LOADER TRANSITION OVERLAY */
+.circle-transition-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.circle-transition-overlay.active {
+    pointer-events: all;
+}
+
+.circle-element {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: 0 0 0 250vmax #050405;
+    transform: translate(-50%, -50%);
+    transition: width 0.75s cubic-bezier(0.25, 1, 0.3, 1), height 0.75s cubic-bezier(0.25, 1, 0.3, 1);
+    will-change: width, height;
+    left: 50%;
+    top: 50%;
+}
+
+.circle-loader-content {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translateY(20px);
+    z-index: 100001;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+}
+
+.circle-transition-overlay.show-loader .circle-loader-content {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0);
+}
+
+.circle-loader-gif {
+    width: 30em;
+    height: auto;
+    object-fit: cover;
+    border-radius: 15em;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Floating Refresh Button */
+.floating-refresh-btn {
+    position: fixed;
+    bottom: 2.5rem;
+    right: 2.5rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #1f1a24;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    color: var(--text-main, #ffffff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 9999;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.floating-refresh-btn:hover {
+    background: var(--accent-purple, #8b5cf6);
+    border-color: var(--accent-purple, #8b5cf6);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(139, 92, 246, 0.4);
+}
+
+.floating-refresh-btn:hover svg {
+    transform: rotate(180deg);
+}
+
+.floating-refresh-btn svg {
+    transition: transform 0.3s ease;
+}
+
+/* Global autofill override to preserve background transparency and white text color */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s;
+    -webkit-text-fill-color: inherit !important;
+    caret-color: inherit !important;
+}
