@@ -58,59 +58,6 @@
                     @csrf
                     
                     <div class="choices-grid" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));">
-                        @php
-                        $interests = [
-                            [
-                                'val' => 'web-dev',
-                                'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
-                                'name' => 'Web Development',
-                                'desc' => 'HTML, CSS, JS, React, Laravel'
-                            ],
-                            [
-                                'val' => 'game-dev',
-                                'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="3"/></svg>',
-                                'name' => 'Game Development',
-                                'desc' => 'Unity, Godot, C#, GDScript'
-                            ],
-                            [
-                                'val' => 'mobile-dev',
-                                'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
-                                'name' => 'Mobile Development',
-                                'desc' => 'Flutter, React Native'
-                            ],
-                            [
-                                'val' => 'data-science',
-                                'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3"/></svg>',
-                                'name' => 'Data Science & AI',
-                                'desc' => 'Python, ML, TensorFlow'
-                            ],
-                            [
-                                'val' => 'cloud-devops',
-                                'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19A5.5 5.5 0 0 0 22 13.5A5.5 5.5 0 0 0 16.5 8h-.5A7 7 0 1 0 2 13.5A5.5 5.5 0 0 0 7.5 19z"/></svg>',
-                                'name' => 'Cloud & DevOps',
-                                'desc' => 'AWS, Docker, CI/CD'
-                            ],
-                            [
-                                'val' => 'cybersecurity',
-                                'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-                                'name' => 'Cybersecurity',
-                                'desc' => 'Ethical hacking, Security'
-                            ],
-                            [
-                                'val' => 'ui-ux',
-                                'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12c0 5.5228 4.47715 10 10 10z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="11.5" cy="7.5" r="1"/><circle cx="16.5" cy="9.5" r="1"/><circle cx="15.5" cy="14.5" r="1.5"/></svg>',
-                                'name' => 'UI/UX Design',
-                                'desc' => 'Figma, Design Systems'
-                            ],
-                            [
-                                'val' => 'blockchain',
-                                'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
-                                'name' => 'Blockchain',
-                                'desc' => 'Web3, Solidity, DApps'
-                            ],
-                        ];
-                        @endphp
-                        
                         @foreach($interests as $item)
                         <div class="choice-item">
                             <input type="radio" name="interest" id="int_{{ $item['val'] }}" value="{{ $item['val'] }}" {{ old('interest') == $item['val'] ? 'checked' : '' }}>

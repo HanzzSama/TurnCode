@@ -9,7 +9,8 @@ class OnboardingController extends Controller
 {
     public function interest()
     {
-        return view('onboarding.interest');
+        $interests = \App\Models\Interest::all();
+        return view('onboarding.interest', compact('interests'));
     }
 
     public function storeInterest(Request $request)
@@ -29,7 +30,8 @@ class OnboardingController extends Controller
         if (!$user->interest) {
             return redirect()->route('onboarding.interest');
         }
-        return view('onboarding.focus', ['interest' => $user->interest]);
+        $fokusList = \App\Models\Fokus::where('interest_val', $user->interest)->get();
+        return view('onboarding.focus', ['interest' => $user->interest, 'fokusList' => $fokusList]);
     }
 
     public function storeFocus(Request $request)

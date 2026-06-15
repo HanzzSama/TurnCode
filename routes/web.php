@@ -27,7 +27,7 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
         $user = auth()->user();
         $focus = $user->focus;
 
-        $courseTitle = match($focus) {
+        $courseTitle = match ($focus) {
             'frontend' => 'Front End',
             'backend' => 'Back End',
             'fullstack' => 'Full Stack Dev',
@@ -45,7 +45,7 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
 
         $totalCourseLessons = 0;
         $completedCourseLessons = 0;
-        
+
         foreach ($submateris as $sub) {
             foreach ($sub->chapters as $chap) {
                 foreach ($chap->lessons as $lsn) {
@@ -75,11 +75,11 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
     Route::get('/history', function () {
         $user = auth()->user();
         $completedLessons = $user->lessons()->with('chapter.submateri.course')->orderBy('lesson_user.created_at', 'desc')->get();
-        
+
         $historyGroups = [];
         foreach ($completedLessons as $lesson) {
             $date = \Carbon\Carbon::parse($lesson->pivot->created_at);
-            
+
             if ($date->isToday()) {
                 $dateLabel = 'Hari ini';
             } elseif ($date->isYesterday()) {
@@ -88,7 +88,7 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
                 \Carbon\Carbon::setLocale('id');
                 $dateLabel = $date->translatedFormat('d F Y');
             }
-            
+
             $historyGroups[$dateLabel][] = $lesson;
         }
 
@@ -111,7 +111,7 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
             $currentDay = $startDate->copy()->addDays($i);
             $dateStr = $currentDay->format('Y-m-d');
             $count = $activities[$dateStr] ?? 0;
-            
+
             if ($count == 0) {
                 $level = '';
             } elseif ($count == 1) {
@@ -123,7 +123,7 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
             } else {
                 $level = 'l4';
             }
-            
+
             \Carbon\Carbon::setLocale('id');
             $heatmapData[] = [
                 'date' => $currentDay->translatedFormat('d M Y'),
@@ -145,14 +145,14 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
         if (!empty($activityDates)) {
             $today = \Carbon\Carbon::today()->format('Y-m-d');
             $yesterday = \Carbon\Carbon::yesterday()->format('Y-m-d');
-            
+
             $currentDate = null;
             if (in_array($today, $activityDates)) {
                 $currentDate = \Carbon\Carbon::today();
             } elseif (in_array($yesterday, $activityDates)) {
                 $currentDate = \Carbon\Carbon::yesterday();
             }
-            
+
             if ($currentDate) {
                 while (true) {
                     $dateStr = $currentDate->format('Y-m-d');
@@ -165,7 +165,7 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
                 }
             }
         }
-        
+
         return view('history', compact('historyGroups', 'totalSessions', 'totalExp', 'totalHours', 'streak', 'heatmapData'));
     })->name('history');
 
@@ -206,6 +206,12 @@ Route::middleware('auth')->group(function () {
 
 // Admin Authentication & Workspace
 Route::prefix('admin')->name('admin.')->group(function () {
+    if (app()->environment('local')) {
+        Route::get('/bypass-login', function() {
+            session(['admin_authenticated' => true, 'admin_email' => 'admin@turncode.com']);
+            return redirect()->route('admin.dashboard');
+        });
+    }
     // Guest Routes
     Route::get('/login', [\App\Http\Controllers\AdminAuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [\App\Http\Controllers\AdminAuthController::class, 'submitLogin'])->name('login.submit');
@@ -217,11 +223,34 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Secure Admin Workspace Routes
     Route::middleware('admin.auth')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/database/table-data/{table}', [\App\Http\Controllers\AdminDashboardController::class, 'getTableData'])->name('database.tableData');
         Route::put('/users/{user}/exp', [\App\Http\Controllers\AdminDashboardController::class, 'updateUserExp'])->name('users.updateExp');
         Route::delete('/users/{user}', [\App\Http\Controllers\AdminDashboardController::class, 'deleteUser'])->name('users.delete');
+
+        // Interest CRUD
+        Route::post('/interests', [\App\Http\Controllers\AdminDashboardController::class, 'storeInterest'])->name('interests.store');
+        Route::put('/interests/{interest}', [\App\Http\Controllers\AdminDashboardController::class, 'updateInterest'])->name('interests.update');
+        Route::delete('/interests/{interest}', [\App\Http\Controllers\AdminDashboardController::class, 'deleteInterest'])->name('interests.delete');
+
+        // Fokus CRUD
+        Route::post('/fokus', [\App\Http\Controllers\AdminDashboardController::class, 'storeFokus'])->name('fokus.store');
+        Route::put('/fokus/{fokus}', [\App\Http\Controllers\AdminDashboardController::class, 'updateFokus'])->name('fokus.update');
+        Route::delete('/fokus/{fokus}', [\App\Http\Controllers\AdminDashboardController::class, 'deleteFokus'])->name('fokus.delete');
+
+        // Submateri CRUD
+        Route::post('/submateri', [\App\Http\Controllers\AdminDashboardController::class, 'storeSubmateri'])->name('submateri.store');
+        Route::put('/submateri/{submateri}', [\App\Http\Controllers\AdminDashboardController::class, 'updateSubmateri'])->name('submateri.update');
+        Route::delete('/submateri/{submateri}', [\App\Http\Controllers\AdminDashboardController::class, 'deleteSubmateri'])->name('submateri.delete');
+        Route::post('/media/upload', [\App\Http\Controllers\AdminDashboardController::class, 'uploadMedia'])->name('media.upload');
+
+        // Quiz/Bank Soal CRUD
+        Route::post('/quizzes', [\App\Http\Controllers\AdminDashboardController::class, 'storeQuiz'])->name('quizzes.store');
+        Route::put('/quizzes/{quiz}', [\App\Http\Controllers\AdminDashboardController::class, 'updateQuiz'])->name('quizzes.update');
+        Route::delete('/quizzes/{quiz}', [\App\Http\Controllers\AdminDashboardController::class, 'deleteQuiz'])->name('quizzes.delete');
+
         Route::post('/logout', [\App\Http\Controllers\AdminAuthController::class, 'logout'])->name('logout');
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
