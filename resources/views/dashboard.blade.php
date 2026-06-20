@@ -444,6 +444,479 @@
                 padding: 1.2rem;
             }
         }
+
+        /* Premium Flash Notification Alerts */
+        .premium-alert-banner {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            border: 1px solid;
+            animation: slideDownFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 50em;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .premium-alert-success {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .premium-alert-error {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .premium-alert-close {
+            margin-left: auto;
+            background: transparent;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .premium-alert-close:hover {
+            opacity: 1;
+        }
+
+        .premium-alert-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 0 0 16px 16px;
+            overflow: hidden;
+        }
+
+        .premium-alert-progress-bar {
+            height: 100%;
+            width: 100%;
+            border-radius: inherit;
+            animation: alertCountdown 10s linear forwards;
+        }
+
+        .premium-alert-success .premium-alert-progress-bar {
+            background: linear-gradient(90deg, #10b981, #34d399);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+
+        .premium-alert-error .premium-alert-progress-bar {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+        }
+
+        @keyframes alertCountdown {
+            from {
+                width: 100%;
+            }
+
+            to {
+                width: 0%;
+            }
+        }
+
+        .premium-alert-banner.dismissing {
+            opacity: 0;
+            transform: translate(-50%, -20px);
+            pointer-events: none;
+        }
+
+        @keyframes slideDownFadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        /* "Pilih Tujuan Lainnya" Component Styles */
+        .pilih-tujuan-wrapper {
+            margin-top: 2rem;
+            margin-bottom: 3rem;
+            background: rgba(30, 27, 31, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 2.5rem;
+            backdrop-filter: blur(16px);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .pilih-tujuan-wrapper::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(var(--accent-rgb), 0.05) 0%, transparent 70%);
+            bottom: -150px;
+            right: -150px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .pilih-tujuan-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .pilih-tujuan-title i {
+            color: #eab308;
+            filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.4));
+        }
+
+        .pilih-tujuan-subtitle {
+            font-size: 0.95rem;
+            color: #b3aeb6;
+            margin-bottom: 2rem;
+        }
+
+        /* Tab Controls */
+        .interest-tabs {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 1rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        .interest-tabs::-webkit-scrollbar {
+            display: none;
+            /* Safari and Chrome */
+        }
+
+        .interest-tab-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #b3aeb6;
+            padding: 0.75rem 1.25rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .interest-tab-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2.2;
+            transition: transform 0.3s;
+        }
+
+        .interest-tab-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .interest-tab-btn.active {
+            background: rgb(var(--accent-rgb));
+            color: #110e12;
+            border-color: rgb(var(--accent-rgb));
+            font-weight: 700;
+            box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.3);
+        }
+
+        .interest-tab-btn.active svg {
+            transform: scale(1.1);
+        }
+
+        /* Focus Cards Grid */
+        .focus-panels-container {
+            position: relative;
+        }
+
+        .focus-panel {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .focus-panel.active {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.25rem;
+            opacity: 1;
+            animation: fadeInUp 0.4s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .focus-option-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1.5px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+
+        .focus-option-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .focus-option-card.selected {
+            background: rgba(var(--accent-rgb), 0.04);
+            border-color: rgb(var(--accent-rgb));
+            box-shadow: 0 0 25px rgba(var(--accent-rgb), 0.15);
+        }
+
+        .focus-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .focus-card-icon {
+            width: 42px;
+            height: 42px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            transition: all 0.3s;
+        }
+
+        .focus-option-card:hover .focus-card-icon {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgb(var(--accent-rgb));
+        }
+
+        .focus-option-card.selected .focus-card-icon {
+            background: rgba(var(--accent-rgb), 0.15);
+            color: rgb(var(--accent-rgb));
+        }
+
+        .focus-card-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2;
+        }
+
+        .focus-card-title-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .focus-card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .focus-card-desc {
+            font-size: 0.85rem;
+            color: #b3aeb6;
+            line-height: 1.4;
+            min-height: 40px;
+        }
+
+        .focus-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: auto;
+        }
+
+        .focus-card-tag {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #b3aeb6;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .focus-option-card.selected .focus-card-tag {
+            border-color: rgba(var(--accent-rgb), 0.2);
+            color: rgb(var(--accent-rgb));
+        }
+
+        /* Check Indicator */
+        .focus-card-check {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            background: transparent;
+        }
+
+        .focus-option-card:hover .focus-card-check {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .focus-option-card.selected .focus-card-check {
+            border-color: rgb(var(--accent-rgb));
+            background: rgb(var(--accent-rgb));
+            color: #110e12;
+        }
+
+        .focus-card-check svg {
+            width: 12px;
+            height: 12px;
+            stroke-width: 4;
+            opacity: 0;
+            transform: scale(0.6);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .focus-option-card.selected .focus-card-check svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Completed & Active Focus states */
+        .focus-option-card.is-active {
+            opacity: 0.75;
+            border-color: rgba(124, 106, 247, 0.3) !important;
+            background: rgba(124, 106, 247, 0.02) !important;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .focus-option-card.is-completed {
+            border-color: rgba(16, 185, 129, 0.25);
+            background: rgba(16, 185, 129, 0.02);
+        }
+
+        .focus-option-card.is-completed:hover {
+            border-color: rgba(16, 185, 129, 0.45);
+            background: rgba(16, 185, 129, 0.04);
+        }
+
+        .focus-badge {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 8px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 6px;
+        }
+
+        .focus-badge-active {
+            background: rgba(124, 106, 247, 0.15);
+            color: #7c6af7;
+            border: 1px solid rgba(124, 106, 247, 0.3);
+        }
+
+        .focus-badge-completed {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+        }
+
+        /* Action Row */
+        .pilih-tujuan-actions {
+            margin-top: 2.5rem;
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 1.5rem;
+        }
+
+        .btn-pilih-tujuan-submit {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            color: #110e12;
+            border: none;
+            padding: 0.9rem 2.25rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-pilih-tujuan-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+            background: #f4eff5;
+        }
+
+        .btn-pilih-tujuan-submit:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.3);
+            box-shadow: none;
+        }
     </style>
 </head>
 
@@ -499,6 +972,28 @@
     @include('partials.menu-panel')
 
     <div class="container">
+        <!-- System Alerts -->
+        @if(session('success'))
+            <div class="premium-alert-banner premium-alert-success" id="alertBannerSuccess">
+                <i class="bx bx-check-circle" style="font-size: 1.4rem;"></i>
+                <span>{{ session('success') }}</span>
+                <button class="premium-alert-close" onclick="dismissAlert(this.parentElement)">&times;</button>
+                <div class="premium-alert-progress">
+                    <div class="premium-alert-progress-bar"></div>
+                </div>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="premium-alert-banner premium-alert-error" id="alertBannerError">
+                <i class="bx bx-error-circle" style="font-size: 1.4rem;"></i>
+                <span>{{ session('error') }}</span>
+                <button class="premium-alert-close" onclick="dismissAlert(this.parentElement)">&times;</button>
+                <div class="premium-alert-progress">
+                    <div class="premium-alert-progress-bar"></div>
+                </div>
+            </div>
+        @endif
+
         <!-- Header -->
         <div class="header-section">
             <div class="hero-card" id="heroCard">
@@ -932,6 +1427,11 @@
                 ];
             @endphp
             <div class="android-exam-wrapper">
+                @php
+                    $achievements = auth()->user()->achievements ?? [];
+                    $passedExams = $achievements['passed_exams'] ?? [];
+                    $hasPassedExam = $userCourse && in_array($userCourse->id, $passedExams);
+                @endphp
                 <div class="section-header">
                     <h2 class="section-title">Selamat! Kamu telah menyelesaikan semua materi</h2>
                     <p class="section-subtitle">Buktikan keahlianmu dan dapatkan Sertifikat Fokus</p>
@@ -939,14 +1439,28 @@
 
                 <div class="android-exam-card" style="--accent-rgb: {{ $rgbColor }};">
                     <div class="android-exam-content">
-                        <h3 class="android-exam-title">Ujian Akhir</h3>
-                        <p class="android-exam-desc">Kamu telah menguasai seluruh submateri pada fokus ini. Ambil ujian
-                            akhir sekarang untuk mengevaluasi pemahamanmu secara menyeluruh dan dapatkan <strong>Sertifikat
-                                Fokus</strong> resmi.</p>
+                        @if($hasPassedExam)
+                            <h3 class="android-exam-title">Sertifikat Fokus Tersedia! 🎉</h3>
+                            <p class="android-exam-desc">Selamat! Kamu telah lulus ujian akhir kelas
+                                <strong>{{ $userCourse->title }}</strong>. Unduh Sertifikat Fokus resmimu sekarang sebagai bukti
+                                pencapaianmu.
+                            </p>
 
-                        <a href="{{ route('exam.agreement') }}" class="btn-android-pill">
-                            <span>Mulai Ujian</span>
-                        </a>
+                            <a href="{{ route('certificates.focus', $userCourse->id) }}" class="btn-android-pill"
+                                target="_blank"
+                                style="background: var(--success); border-color: var(--success); color: white; box-shadow: 0 0 12px var(--success);">
+                                <span>Unduh Sertifikat</span>
+                            </a>
+                        @else
+                            <h3 class="android-exam-title">Ujian Akhir</h3>
+                            <p class="android-exam-desc">Kamu telah menguasai seluruh submateri pada fokus ini. Ambil ujian
+                                akhir sekarang untuk mengevaluasi pemahamanmu secara menyeluruh dan dapatkan <strong>Sertifikat
+                                    Fokus</strong> resmi.</p>
+
+                            <a href="{{ route('exam.agreement') }}" class="btn-android-pill">
+                                <span>Mulai Ujian</span>
+                            </a>
+                        @endif
                     </div>
 
                     <div class="android-exam-widget">
@@ -964,11 +1478,103 @@
                                     @endfor
                                 @endfor
                             </svg>
-                            <div class="android-exam-screen-dot-matrix">STATUS: ELIGIBLE</div>
+                            <div class="android-exam-screen-dot-matrix">STATUS: {{ $hasPassedExam ? 'PASSED' : 'ELIGIBLE' }}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            @if($hasPassedExam)
+                <!-- PILIH TUJUAN LAINNYA COMPONENT -->
+                <div class="pilih-tujuan-wrapper" style="--accent-rgb: {{ $rgbColor }};">
+                    <h3 class="pilih-tujuan-title">
+                        <i class='bx bxs-compass'></i>
+                        <span>Pilih Tujuan Belajar Lainnya</span>
+                    </h3>
+                    <p class="pilih-tujuan-subtitle">Selamat atas kelulusanmu! Mau belajar keahlian apa lagi selanjutnya? Pilih
+                        minat dan fokus barumu di bawah ini.</p>
+
+                    <!-- Tab Interest Buttons -->
+                    <div class="interest-tabs">
+                        @foreach($interests as $index => $int)
+                            <button type="button" class="interest-tab-btn {{ $index === 0 ? 'active' : '' }}"
+                                data-target="panel-{{ $int->val }}" onclick="switchInterestTab(this)">
+                                {!! $int->icon !!}
+                                <span>{{ $int->name }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+
+                    <!-- Focus Panels Container -->
+                    <form method="POST" action="{{ route('change-focus') }}" id="changeFocusForm">
+                        @csrf
+                        <input type="hidden" name="interest" id="selectedInterestVal"
+                            value="{{ $interests->first()->val ?? '' }}">
+                        <input type="hidden" name="focus" id="selectedFocusVal" value="">
+
+                        <div class="focus-panels-container">
+                            @foreach($interests as $index => $int)
+                                <div class="focus-panel {{ $index === 0 ? 'active' : '' }}" id="panel-{{ $int->val }}">
+                                    @forelse($int->focusItems as $f)
+                                        @php
+                                            $isCompleted = in_array($f->val, $completedFocuses ?? []);
+                                            $isActiveFocus = $f->val === auth()->user()->focus;
+                                        @endphp
+                                        <div class="focus-option-card {{ $isActiveFocus ? 'is-active' : '' }} {{ $isCompleted ? 'is-completed' : '' }}" 
+                                             data-interest="{{ $int->val }}" 
+                                             data-focus="{{ $f->val }}"
+                                             @if(!$isActiveFocus) onclick="selectFocusCard(this)" @endif>
+                                            <div class="focus-card-header">
+                                                <div class="focus-card-icon">
+                                                    {!! $f->icon !!}
+                                                </div>
+                                                <div class="focus-card-title-wrap">
+                                                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                                        <span class="focus-card-title">{{ $f->name }}</span>
+                                                        @if($isActiveFocus)
+                                                            <span class="focus-badge focus-badge-active"><i class='bx bx-play-circle'></i> Aktif</span>
+                                                        @elseif($isCompleted)
+                                                            <span class="focus-badge focus-badge-completed"><i class='bx bx-check-circle'></i> Selesai</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <p class="focus-card-desc">{{ $f->desc }}</p>
+
+                                            @if($f->tags)
+                                                <div class="focus-card-tags">
+                                                    @foreach(explode(',', $f->tags) as $tag)
+                                                        <span class="focus-card-tag">{{ trim($tag) }}</span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+
+                                            @if(!$isActiveFocus)
+                                                <div class="focus-card-check">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @empty
+                                        <p style="color: #b3aeb6; font-size: 0.9rem; grid-column: 1/-1; text-align: center;">Belum ada
+                                            fokus untuk minat ini.</p>
+                                    @endforelse
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="pilih-tujuan-actions">
+                            <button type="submit" class="btn-pilih-tujuan-submit" id="btnChangeFocusSubmit" disabled>
+                                <span>Pilih Fokus & Lanjut Belajar</span>
+                                <i class="bx bx-right-arrow-alt" style="font-size: 1.2rem;"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            @endif
         @endif
 
         <!-- MATERI BELAJAR -->
@@ -2836,32 +3442,6 @@
                             elTier.textContent = context.tier;
                         }
 
-                        // Check streak milestone celebration
-                        if (context.streak === 3 || context.streak === 7 || context.streak === 14 || context.streak === 30) {
-                            setTimeout(() => {
-                                const streakMsgs = {
-                                    chill: `Wih... streak ${context.streak} hari. Santai dan gokil! 🌿`,
-                                    energetic: `GILA!!! STREAK ${context.streak} HARI!!! LUAR BIASA! PUSH TERUSS!!! 🔥💪🚀`,
-                                    wise: `Pencapaian luar biasa. Dirimu telah menuntut ilmu selama ${context.streak} hari berturut-turut. 💎📚`,
-                                    hype: `Slay abis! Streak ${context.streak} hari bestie! Proud of you! 😎👑`
-                                };
-                                showBuddyToast(streakMsgs[currentPersonality] || `Streak ${context.streak} hari!`, 'celebration');
-                            }, 3000);
-                        }
-
-                        // Check all daily missions completed celebration
-                        if (context.missions_total > 0 && context.missions_done === context.missions_total) {
-                            setTimeout(() => {
-                                const missionMsgs = {
-                                    chill: "Semua misi hari ini beres... chill time! 🌿☕",
-                                    energetic: "SEMUA MISI HARI INI RATA KANAN!!! LUAR BIASA! KAMU JUARA!! 🔥🏆💪",
-                                    wise: "Setiap kewajiban hari ini telah tertunaikan dengan sempurna. Indah sekali. 📚💎",
-                                    hype: "Misi harian dibabat habis! Slay banget, no debat! 👑😎"
-                                };
-                                showBuddyToast(missionMsgs[currentPersonality] || "Misi selesai semua! 🎉", 'celebration');
-                            }, 5000);
-                        }
-
                         // Populate learning recommendation
                         const recCard = document.getElementById('buddy-recommendation-card');
                         const recCourse = document.getElementById('buddy-rec-course-title');
@@ -3890,10 +4470,93 @@
 
         initBuddySystem();
 
+        // Pilih Tujuan Lainnya JS functions
+        function switchInterestTab(button) {
+            const tabs = button.parentElement.querySelectorAll('.interest-tab-btn');
+            tabs.forEach(t => t.classList.remove('active'));
+            button.classList.add('active');
+
+            const panels = document.querySelectorAll('.focus-panel');
+            panels.forEach(p => p.classList.remove('active'));
+
+            const targetPanelId = button.getAttribute('data-target');
+            const targetPanel = document.getElementById(targetPanelId);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+
+            const interestVal = targetPanelId.replace('panel-', '');
+            const selectedInterestInput = document.getElementById('selectedInterestVal');
+            if (selectedInterestInput) {
+                selectedInterestInput.value = interestVal;
+            }
+
+            clearFocusSelection();
+        }
+
+        function selectFocusCard(card) {
+            const cards = document.querySelectorAll('.focus-option-card');
+            cards.forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+
+            const interestVal = card.getAttribute('data-interest');
+            const focusVal = card.getAttribute('data-focus');
+
+            const selectedInterestInput = document.getElementById('selectedInterestVal');
+            const selectedFocusInput = document.getElementById('selectedFocusVal');
+            const submitBtn = document.getElementById('btnChangeFocusSubmit');
+
+            if (selectedInterestInput) selectedInterestInput.value = interestVal;
+            if (selectedFocusInput) selectedFocusInput.value = focusVal;
+            if (submitBtn) submitBtn.disabled = false;
+        }
+
+        function clearFocusSelection() {
+            const cards = document.querySelectorAll('.focus-option-card');
+            cards.forEach(c => c.classList.remove('selected'));
+
+            const selectedFocusInput = document.getElementById('selectedFocusVal');
+            const submitBtn = document.getElementById('btnChangeFocusSubmit');
+
+            if (selectedFocusInput) selectedFocusInput.value = '';
+            if (submitBtn) submitBtn.disabled = true;
+        }
+
+        // Alert auto-dismiss system
+        function dismissAlert(el) {
+            if (!el || el.classList.contains('dismissing')) return;
+            el.classList.add('dismissing');
+            setTimeout(() => el.remove(), 500);
+        }
+
+        function initAlerts() {
+            document.querySelectorAll('.premium-alert-banner').forEach(banner => {
+                // Auto-dismiss after 10 seconds
+                const timerId = setTimeout(() => dismissAlert(banner), 10000);
+                // Cancel timer if user manually closes
+                banner.querySelector('.premium-alert-close')?.addEventListener('click', () => {
+                    clearTimeout(timerId);
+                });
+                // Pause progress bar on hover
+                banner.addEventListener('mouseenter', () => {
+                    const bar = banner.querySelector('.premium-alert-progress-bar');
+                    if (bar) bar.style.animationPlayState = 'paused';
+                });
+                banner.addEventListener('mouseleave', () => {
+                    const bar = banner.querySelector('.premium-alert-progress-bar');
+                    if (bar) bar.style.animationPlayState = 'running';
+                });
+            });
+        }
+
+        // Initialize alerts on page load
+        initAlerts();
+
         if (!window.dashboardTurboBound) {
             window.dashboardTurboBound = true;
             document.addEventListener('turbo:load', function () {
                 if (typeof initDashboardJs === 'function') initDashboardJs();
+                initAlerts();
             });
         }
     </script>

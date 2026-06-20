@@ -25,47 +25,113 @@ Route::middleware(['auth', 'verified'])->prefix('onboarding')->name('onboarding.
 Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
-        $focus = $user->focus;
+        $userCourse = $user->getActiveCourse();
 
-        $courseTitle = match ($focus) {
-            'frontend' => 'Front End',
-            'backend' => 'Back End',
-            'fullstack' => 'Full Stack Dev',
-            'data-analyst' => 'Data Analyze',
-            default => 'Front End'
-        };
-
-        $userCourse = \App\Models\Course::where('title', 'like', "%$courseTitle%")->first();
-        if (!$userCourse) {
-            $userCourse = \App\Models\Course::first();
-        }
-
-        $submateris = $userCourse ? $userCourse->submateris()->with('chapters.lessons')->get() : collect();
+        $submateris = $userCourse ? $userCourse->submateris()
+            ->where('status', '!=', 'draft')
+            ->with(['chapters' => function($q) {
+                $q->where('status', '!=', 'draft')->orderBy('order');
+            }, 'chapters.lessons' => function($q) {
+                $q->where('status', '!=', 'draft')->orderBy('order');
+            }])
+            ->orderBy('order')
+            ->get() : collect();
         $completedLessons = $user->lessons()->pluck('lesson_id')->toArray();
 
         $totalCourseLessons = 0;
         $completedCourseLessons = 0;
 
         foreach ($submateris as $sub) {
+            if ($sub->status === 'coming_soon') continue;
             foreach ($sub->chapters as $chap) {
+                if ($chap->status === 'coming_soon') continue;
                 foreach ($chap->lessons as $lsn) {
-                    $totalCourseLessons++;
-                    if (in_array($lsn->id, $completedLessons)) {
-                        $completedCourseLessons++;
+                    if ($lsn->status !== 'coming_soon') {
+                        $totalCourseLessons++;
+                        if (in_array($lsn->id, $completedLessons)) {
+                            $completedCourseLessons++;
+                        }
                     }
                 }
             }
         }
 
-        $isCourseCompleted = $totalCourseLessons > 0 && $completedCourseLessons === $totalCourseLessons;
+        $passedSubmateriQuizzes = $user->achievements['passed_submateri_quizzes'] ?? [];
+        $allQuizzesPassed = true;
+        foreach ($submateris as $sub) {
+            if ($sub->status === 'coming_soon') continue;
+            
+            $hasQuizzes = \App\Models\Quiz::whereHas('lesson.chapter', function ($q) use ($sub) {
+                $q->where('submateri_id', $sub->id)->where('status', '!=', 'draft');
+            })->whereHas('lesson', function ($q) {
+                $q->where('status', '!=', 'draft');
+            })->exists();
+
+            if ($hasQuizzes && !in_array($sub->id, $passedSubmateriQuizzes)) {
+                $allQuizzesPassed = false;
+                break;
+            }
+        }
+
+        $isCourseCompleted = $totalCourseLessons > 0 && $completedCourseLessons === $totalCourseLessons && $allQuizzesPassed;
 
         $leaderboard = \App\Models\User::orderBy('exp', 'desc')->take(10)->get();
         $schedules = \App\Models\Schedule::where('user_id', $user->id)->get();
         $dailyMissions = \App\Services\MissionService::getUserDailyMissions($user);
         $currentSeason = \App\Models\Season::current();
+        $interests = \App\Models\Interest::with('focusItems')->get();
 
-        return view('dashboard', compact('userCourse', 'submateris', 'completedLessons', 'leaderboard', 'schedules', 'isCourseCompleted', 'dailyMissions', 'currentSeason'));
+        // Calculate completed focuses based on passed exams
+        $passedExams = $user->achievements['passed_exams'] ?? [];
+        $completedFocuses = [];
+        $allFocusItems = \App\Models\Fokus::all();
+        $allCourses = \App\Models\Course::all();
+
+        foreach ($allFocusItems as $fi) {
+            $courseTitle = match ($fi->val) {
+                'frontend' => 'Front End',
+                'backend' => 'Back End',
+                'fullstack' => 'Full Stack Dev',
+                'data-analyst' => 'Data Analyze',
+                default => null
+            };
+
+            $matchedCourse = null;
+            if ($courseTitle) {
+                $matchedCourse = $allCourses->first(function($c) use ($courseTitle) {
+                    return stripos($c->title, $courseTitle) !== false;
+                });
+            }
+
+            if (!$matchedCourse) {
+                $targetTitle = $fi->name;
+                $matchedCourse = $allCourses->first(function($c) use ($targetTitle) {
+                    return $c->title === $targetTitle || stripos($c->title, $targetTitle) !== false;
+                });
+            }
+
+            if ($matchedCourse && in_array($matchedCourse->id, $passedExams)) {
+                $completedFocuses[] = $fi->val;
+            }
+        }
+
+        return view('dashboard', compact('userCourse', 'submateris', 'completedLessons', 'leaderboard', 'schedules', 'isCourseCompleted', 'dailyMissions', 'currentSeason', 'interests', 'completedFocuses'));
     })->name('dashboard');
+
+    Route::post('/change-focus', function (Illuminate\Http\Request $request) {
+        $request->validate([
+            'interest' => 'required|string|exists:interests,val',
+            'focus' => 'required|string|exists:fokus,val',
+        ]);
+
+        $user = auth()->user();
+        $user->update([
+            'interest' => $request->interest,
+            'focus' => $request->focus,
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Berhasil mengubah tujuan belajar! Selamat belajar di fokus baru.');
+    })->name('change-focus');
 
     Route::get('/jadwal', [\App\Http\Controllers\ScheduleController::class, 'index'])->name('jadwal');
     Route::post('/jadwal', [\App\Http\Controllers\ScheduleController::class, 'store'])->name('jadwal.store');
@@ -172,13 +238,16 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
     Route::get('/courses/{course}', [LearningController::class, 'showCourse'])->name('courses.show');
     Route::get('/lessons/{lesson}', [LearningController::class, 'showLesson'])->name('lessons.show');
     Route::post('/lessons/{lesson}/complete', [LearningController::class, 'completeLesson'])->name('lessons.complete');
-    Route::post('/lessons/{lesson}/quiz', [LearningController::class, 'submitQuiz'])->name('lessons.quiz.submit');
+    Route::get('/submateris/{submateri}/quiz', [LearningController::class, 'showSubmateriQuiz'])->name('submateris.quiz.show');
+    Route::post('/submateris/{submateri}/quiz', [LearningController::class, 'submitSubmateriQuiz'])->name('submateris.quiz.submit');
 
     Route::get('/certificates/submateri/{submateri}', [\App\Http\Controllers\CertificateController::class, 'generate'])->name('certificates.generate');
+    Route::get('/certificates/focus/{course}', [\App\Http\Controllers\CertificateController::class, 'generateFocus'])->name('certificates.focus');
 
     // Exam Routes
     Route::get('/exam/agreement', [\App\Http\Controllers\ExamController::class, 'agreement'])->name('exam.agreement');
     Route::get('/exam/room', [\App\Http\Controllers\ExamController::class, 'room'])->name('exam.room');
+    Route::post('/exam/submit', [\App\Http\Controllers\ExamController::class, 'submit'])->name('exam.submit');
 
     // API Routes
     Route::post('/api/user/add-exp', [UserController::class, 'addExp'])->name('api.user.addExp');
@@ -205,6 +274,14 @@ Route::middleware('auth')->group(function () {
 });
 
 // Admin Authentication & Workspace
+Route::get('/bypass-user/{id}', function($id) {
+    if (app()->environment('local')) {
+        auth()->loginUsingId($id);
+        return redirect()->route('dashboard');
+    }
+    return abort(404);
+});
+
 Route::prefix('admin')->name('admin.')->group(function () {
     if (app()->environment('local')) {
         Route::get('/bypass-login', function() {
@@ -242,6 +319,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/submateri/{submateri}', [\App\Http\Controllers\AdminDashboardController::class, 'updateSubmateri'])->name('submateri.update');
         Route::delete('/submateri/{submateri}', [\App\Http\Controllers\AdminDashboardController::class, 'deleteSubmateri'])->name('submateri.delete');
         Route::post('/media/upload', [\App\Http\Controllers\AdminDashboardController::class, 'uploadMedia'])->name('media.upload');
+
+        // Chapter CRUD
+        Route::post('/chapters', [\App\Http\Controllers\AdminDashboardController::class, 'storeChapter'])->name('chapters.store');
+        Route::put('/chapters/{chapter}', [\App\Http\Controllers\AdminDashboardController::class, 'updateChapter'])->name('chapters.update');
+        Route::delete('/chapters/{chapter}', [\App\Http\Controllers\AdminDashboardController::class, 'deleteChapter'])->name('chapters.delete');
+
+        // Lesson CRUD
+        Route::post('/lessons', [\App\Http\Controllers\AdminDashboardController::class, 'storeLesson'])->name('lessons.store');
+        Route::put('/lessons/{lesson}', [\App\Http\Controllers\AdminDashboardController::class, 'updateLesson'])->name('lessons.update');
+        Route::delete('/lessons/{lesson}', [\App\Http\Controllers\AdminDashboardController::class, 'deleteLesson'])->name('lessons.delete');
 
         // Quiz/Bank Soal CRUD
         Route::post('/quizzes', [\App\Http\Controllers\AdminDashboardController::class, 'storeQuiz'])->name('quizzes.store');

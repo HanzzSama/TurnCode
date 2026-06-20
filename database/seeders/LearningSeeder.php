@@ -41,18 +41,34 @@ class LearningSeeder extends Seeder
             'order' => 1
         ]);
 
-        Lesson::create([
+        $feL1 = Lesson::create([
             'chapter_id' => $feHTMLChapter->id,
             'title' => 'Membangun Struktur Web',
             'content' => '<h3>Pengenalan HTML</h3><p>HTML (HyperText Markup Language) adalah tulang punggung dari setiap halaman web. HTML mendefinisikan struktur konten menggunakan elemen-elemen standar seperti paragraf, judul, gambar, dan link.</p><p>Mari mulai perjalanan frontend kita dengan menyusun kerangka dokumen HTML yang valid dan kokoh!</p>',
             'order' => 1
         ]);
 
-        Lesson::create([
+        Quiz::create([
+            'lesson_id' => $feL1->id,
+            'question' => 'Apa kepanjangan dari HTML?',
+            'options' => ['Hyper Text Markup Language', 'Hyper Text Markdown Language', 'High Text Markup Language', 'Hyperlink and Text Markup Language'],
+            'correct_answer' => 'Hyper Text Markup Language',
+            'explanation' => 'HTML merupakan singkatan dari Hyper Text Markup Language yang digunakan sebagai bahasa markup standar untuk membuat halaman web.'
+        ]);
+
+        $feL2 = Lesson::create([
             'chapter_id' => $feHTMLChapter->id,
             'title' => 'Mengenal Tag dan Elemen',
             'content' => '<h3>Elemen & Tag HTML</h3><p>Setiap struktur di halaman web dibentuk oleh tag pembuka dan penutup. Pelajari cara menggunakan tag heading &lt;h1&gt; sampai &lt;h6&gt;, tag paragraf &lt;p&gt;, serta tag container penting lainnya.</p>',
             'order' => 2
+        ]);
+
+        Quiz::create([
+            'lesson_id' => $feL2->id,
+            'question' => 'Tag manakah yang digunakan untuk membuat judul utama atau heading terbesar di HTML?',
+            'options' => ['<h1>', '<head>', '<heading>', '<h6>'],
+            'correct_answer' => '<h1>',
+            'explanation' => 'Tag <h1> digunakan untuk mendefinisikan heading paling utama dan penting di halaman web, sedangkan <h6> digunakan untuk heading terkecil.'
         ]);
 
         // Submateri CSS
@@ -70,11 +86,19 @@ class LearningSeeder extends Seeder
             'order' => 1
         ]);
 
-        Lesson::create([
+        $feL3 = Lesson::create([
             'chapter_id' => $feCSSChapter->id,
             'title' => 'Styling dengan Selector',
             'content' => '<h3>Menghias Web dengan CSS</h3><p>Pelajari cara menghubungkan CSS dengan HTML, menggunakan class dan id selector, serta mengubah warna, background, dan font dokumen web Anda.</p>',
             'order' => 1
+        ]);
+
+        Quiz::create([
+            'lesson_id' => $feL3->id,
+            'question' => 'Selector manakah di bawah ini yang digunakan untuk memilih elemen dengan id tertentu di CSS?',
+            'options' => ['#id', '.class', '*element', ':hover'],
+            'correct_answer' => '#id',
+            'explanation' => 'Di CSS, tanda pagar (#) digunakan sebagai id selector, sedangkan titik (.) digunakan sebagai class selector.'
         ]);
 
         // Submateri JavaScript
@@ -92,11 +116,19 @@ class LearningSeeder extends Seeder
             'order' => 1
         ]);
 
-        Lesson::create([
+        $feL4 = Lesson::create([
             'chapter_id' => $feJSChapter->id,
             'title' => 'Variabel dan Tipe Data',
             'content' => '<h3>Pemrograman dengan JavaScript</h3><p>Pahami cara kerja variabel dengan let, const, dan tipe data primitif seperti string, number, dan boolean di ekosistem JavaScript modern.</p>',
             'order' => 1
+        ]);
+
+        Quiz::create([
+            'lesson_id' => $feL4->id,
+            'question' => 'Manakah kata kunci deklarasi variabel di JavaScript modern yang nilainya tidak dapat diubah kembali (read-only)?',
+            'options' => ['const', 'let', 'var', 'static'],
+            'correct_answer' => 'const',
+            'explanation' => 'Variabel yang dideklarasikan dengan const bersifat konstan dan nilainya tidak dapat diubah setelah diinisialisasi.'
         ]);
 
 
@@ -125,11 +157,19 @@ class LearningSeeder extends Seeder
             'order' => 1
         ]);
 
-        Lesson::create([
+        $beL1 = Lesson::create([
             'chapter_id' => $bePHPChapter->id,
             'title' => 'Sintaks Dasar PHP',
             'content' => '<h3>Halo Dunia PHP!</h3><p>Pelajari dasar server-side scripting menggunakan PHP. Mengerti cara kerja tag pembuka &lt;?php, melakukan echo, dan membuat variabel dinamis di server.</p>',
             'order' => 1
+        ]);
+
+        Quiz::create([
+            'lesson_id' => $beL1->id,
+            'question' => 'Bagaimana cara menulis komentar satu baris di dalam sintaks PHP?',
+            'options' => ['// komentar', '<!-- komentar -->', '/* komentar */', '# komentar'],
+            'correct_answer' => '// komentar',
+            'explanation' => 'PHP menggunakan // atau # untuk komentar satu baris, dan /* ... */ untuk komentar multi baris.'
         ]);
 
         // Submateri MySQL
@@ -147,11 +187,19 @@ class LearningSeeder extends Seeder
             'order' => 1
         ]);
 
-        Lesson::create([
+        $beL2 = Lesson::create([
             'chapter_id' => $beMySQLChapter->id,
             'title' => 'Perancangan Skema Database',
             'content' => '<h3>Mendesain Database Relasional</h3><p>Pahami konsep Primary Key, Foreign Key, normalisasi data, serta cara membuat tabel relasional menggunakan MySQL.</p>',
             'order' => 1
+        ]);
+
+        Quiz::create([
+            'lesson_id' => $beL2->id,
+            'question' => 'Key manakah yang digunakan untuk menghubungkan satu tabel dengan tabel lainnya di dalam database relasional?',
+            'options' => ['Foreign Key', 'Primary Key', 'Unique Key', 'Candidate Key'],
+            'correct_answer' => 'Foreign Key',
+            'explanation' => 'Foreign Key (Kunci Tamu) digunakan untuk membuat relasi/hubungan antara baris di satu tabel dengan baris di tabel lainnya.'
         ]);
 
 
@@ -179,11 +227,19 @@ class LearningSeeder extends Seeder
             'order' => 1
         ]);
 
-        Lesson::create([
+        $daL1 = Lesson::create([
             'chapter_id' => $daChapter1->id,
             'title' => 'Pengenalan Pandas & NumPy',
             'content' => '<h3>Analisis Data dengan Python</h3><p>Manipulasi dataset kamu dengan pustaka Python paling populer di dunia data science: Pandas dan NumPy.</p>',
             'order' => 1
+        ]);
+
+        Quiz::create([
+            'lesson_id' => $daL1->id,
+            'question' => 'Struktur data dua dimensi yang menyerupai tabel/spreadsheet di dalam pustaka Pandas disebut...',
+            'options' => ['DataFrame', 'Series', 'Array', 'List'],
+            'correct_answer' => 'DataFrame',
+            'explanation' => 'DataFrame adalah struktur data dua dimensi berlabel dengan kolom yang tipe datanya bisa berbeda-beda di Pandas.'
         ]);
 
 
@@ -211,11 +267,19 @@ class LearningSeeder extends Seeder
             'order' => 1
         ]);
 
-        Lesson::create([
+        $fsL1 = Lesson::create([
             'chapter_id' => $fsChapter1->id,
             'title' => 'Menghubungkan Frontend dan Backend',
             'content' => '<h3>Integrasi Aplikasi</h3><p>Cara membangun aplikasi yang utuh dan handal dengan menghubungkan React (frontend) dan Node.js (backend) melalui restful API.</p>',
             'order' => 1
+        ]);
+
+        Quiz::create([
+            'lesson_id' => $fsL1->id,
+            'question' => 'Method HTTP manakah yang paling tepat digunakan untuk mengirimkan data baru (create) ke server melalui API?',
+            'options' => ['POST', 'GET', 'PUT', 'DELETE'],
+            'correct_answer' => 'POST',
+            'explanation' => 'Method POST digunakan untuk mengirimkan data baru ke server untuk disimpan di database.'
         ]);
     }
 }

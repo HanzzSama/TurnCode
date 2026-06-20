@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Submateri;
+use App\Models\Course;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -32,10 +33,12 @@ class CertificateController extends Controller
             }
         }
 
-        $isSubmateriCompleted = $submateriLessons->count() > 0 && $completedCount === $submateriLessons->count();
+        $passedSubmateriQuizzes = $user->achievements['passed_submateri_quizzes'] ?? [];
+        $isQuizPassed = in_array($submateri->id, $passedSubmateriQuizzes);
+        $isSubmateriCompleted = $submateriLessons->count() > 0 && $completedCount === $submateriLessons->count() && $isQuizPassed;
 
         if (!$isSubmateriCompleted) {
-            return redirect()->back()->with('error', 'Kamu belum menyelesaikan semua materi di bagian ini.');
+            return redirect()->back()->with('error', 'Kamu belum menyelesaikan kuis atau materi di bagian ini.');
         }
 
         // Get the date of the last completed lesson in this submateri
@@ -47,5 +50,22 @@ class CertificateController extends Controller
         $completionDate = $lastCompletedLesson ? Carbon::parse($lastCompletedLesson->pivot->created_at) : now();
 
         return view('learning.certificate', compact('user', 'submateri', 'courseTitle', 'completionDate'));
+    }
+
+    public function generateFocus(Course $course)
+    {
+        $user = auth()->user();
+        
+        // Check if user has passed the exam
+        $achievements = $user->achievements ?? [];
+        $passedExams = $achievements['passed_exams'] ?? [];
+        
+        if (!in_array($course->id, $passedExams)) {
+            return redirect()->route('dashboard')->with('error', 'Kamu belum lulus ujian akhir untuk fokus ini.');
+        }
+
+        $completionDate = now();
+
+        return view('learning.focus_certificate', compact('user', 'course', 'completionDate'));
     }
 }

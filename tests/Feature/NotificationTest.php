@@ -226,12 +226,14 @@ class NotificationTest extends TestCase
         $submateri = \App\Models\Submateri::create([
             'course_id' => $course->id,
             'title' => 'HTML',
+            'status' => 'published',
         ]);
 
         $chapter = \App\Models\Chapter::create([
             'submateri_id' => $submateri->id,
             'title' => 'Chapter 1',
             'order' => 1,
+            'status' => 'published',
         ]);
 
         $lesson = \App\Models\Lesson::create([
@@ -239,29 +241,35 @@ class NotificationTest extends TestCase
             'title' => 'Tag Dasar HTML',
             'content' => 'Lesson content',
             'order' => 1,
+            'status' => 'published',
         ]);
 
         $quiz = \App\Models\Quiz::create([
             'lesson_id' => $lesson->id,
             'question' => 'Apa tag untuk paragraph?',
-            'options' => json_encode(['p', 'h1', 'div']),
+            'options' => ['p', 'h1', 'div'],
             'correct_answer' => 'p',
             'explanation' => 'Tag p digunakan untuk membuat paragraf.',
         ]);
 
-        $response = $this->actingAs($user)->postJson("/lessons/{$lesson->id}/quiz", [
-            'quiz_id' => $quiz->id,
-            'answer' => 'p',
+        // Complete the lesson to allow accessing the quiz
+        $user->lessons()->attach($lesson->id);
+
+        $response = $this->actingAs($user)->postJson(route('submateris.quiz.submit', $submateri->id), [
+            'answers' => [
+                $quiz->id => 'p'
+            ]
         ]);
 
         $response->assertStatus(200);
         $response->assertJson([
-            'correct' => true,
+            'success' => true,
+            'passed' => true,
         ]);
 
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
-            'title' => 'Materi Selesai 🎉',
+            'title' => 'Lulus Uji Pemahaman! 💡',
             'type' => 'learning',
         ]);
     }

@@ -52,11 +52,22 @@
             @if($course->submateris->count() > 1)
                 <div class="submateri-tabs">
                     @foreach($course->submateris as $sub)
-                        <a href="{{ route('courses.show', [$course->id, 'submateri_id' => $sub->id]) }}"
-                            class="submateri-tab {{ $sub->id == $activeSubmateriId ? 'active' : '' }}">
-                            <span class="submateri-tab-icon">{{ $sub->icon ?: '📚' }}</span>
-                            <span>{{ $sub->title }}</span>
-                        </a>
+                        @php
+                            $isSubComingSoon = $sub->status === 'coming_soon';
+                        @endphp
+                        @if($isSubComingSoon)
+                            <div class="submateri-tab submateri-tab-coming-soon" style="opacity: 0.6; cursor: not-allowed; position: relative; display: flex; align-items: center; gap: 8px;">
+                                <span class="submateri-tab-icon">{{ $sub->icon ?: '📚' }}</span>
+                                <span>{{ $sub->title }}</span>
+                                <span class="badge-coming-soon" style="font-size: 0.65rem; background: #eab308; color: #000; padding: 1px 4px; border-radius: 4px; font-weight: bold;">Soon</span>
+                            </div>
+                        @else
+                            <a href="{{ route('courses.show', [$course->id, 'submateri_id' => $sub->id]) }}"
+                                class="submateri-tab {{ $sub->id == $activeSubmateriId ? 'active' : '' }}">
+                                <span class="submateri-tab-icon">{{ $sub->icon ?: '📚' }}</span>
+                                <span>{{ $sub->title }}</span>
+                            </a>
+                        @endif
                     @endforeach
                 </div>
             @endif
@@ -78,7 +89,7 @@
                                 </div>
                             @endif
                         </div>
-                        @if($isSubmateriCompleted)
+                        @if($isSubmateriCompleted && $submateri->status !== 'coming_soon')
                         <div class="submateri-header-action">
                             <a href="{{ route('certificates.generate', $submateri->id) }}" class="btn-certificate" target="_blank">
                                 <i class='bx bx-trophy' style="font-size: 1.2rem;"></i> Unduh Sertifikat
@@ -90,10 +101,16 @@
                     <!-- Timeline for this Submateri's Chapters -->
                     <div class="timeline-container">
                         <div class="timeline-line"></div>
-                        @php $canAccess = true; @endphp
+                        @php 
+                            $isSubmateriComingSoon = $submateri->status === 'coming_soon';
+                            $canAccess = !$isSubmateriComingSoon; 
+                        @endphp
 
                         @foreach($submateri->chapters as $chapter)
-                            <div class="chapter-group">
+                            @php
+                                $isChapterComingSoon = $chapter->status === 'coming_soon';
+                            @endphp
+                            <div class="chapter-group {{ $isChapterComingSoon ? 'chapter-coming-soon' : '' }}" style="{{ $isChapterComingSoon ? 'opacity: 0.75;' : '' }}">
                                 <div class="timeline-node"></div>
 
                                 <!-- Chapter Card -->
@@ -101,7 +118,12 @@
                                     <div class="chapter-icon"></div>
                                     <div class="chapter-text">
                                         <h3>Bab {{ $chapter->order }}</h3>
-                                        <p>{{ $chapter->title }}</p>
+                                        <p style="display: flex; align-items: center; gap: 8px;">
+                                            <span>{{ $chapter->title }}</span>
+                                            @if($isChapterComingSoon)
+                                                <span class="badge-coming-soon" style="font-size: 0.7rem; background: #eab308; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; display: inline-block; vertical-align: middle;">Coming Soon</span>
+                                            @endif
+                                        </p>
                                     </div>
                                 </div>
 
@@ -109,26 +131,94 @@
                                 <div class="lesson-list">
                                     @foreach($chapter->lessons as $lesson)
                                         @php 
+                                            $isLessonComingSoon = $lesson->status === 'coming_soon';
                                             $isCompleted = in_array($lesson->id, $completedLessons); 
-                                            $isLocked = !$canAccess;
+                                            $isLocked = !$canAccess || $isChapterComingSoon || $isLessonComingSoon;
                                             
-                                            // Lock subsequent lessons if this one is not completed
-                                            if (!$isCompleted) {
+                                            // Lock subsequent lessons if this one is not completed and NOT coming_soon
+                                            if (!$isCompleted && !$isLessonComingSoon && !$isChapterComingSoon && !$isSubmateriComingSoon) {
                                                 $canAccess = false;
                                             }
                                         @endphp
-                                        <a href="{{ $isLocked ? '#' : route('lessons.show', $lesson->id) }}"
-                                            class="lesson-card {{ $isCompleted ? 'completed' : '' }} {{ $isLocked ? 'locked' : '' }}">
-                                            <div class="lesson-dot"></div>
-                                            <span class="lesson-title">{{ $lesson->title }}</span>
-                                            @if($isLocked)
-                                                <i class='bx bxs-lock-alt' style="margin-left: auto; font-size: 0.9rem; color: rgba(255,255,255,0.3);"></i>
-                                            @endif
-                                        </a>
+                                        @if($isLessonComingSoon)
+                                            <div class="lesson-card locked coming-soon" style="opacity: 0.65; cursor: not-allowed; display: flex; align-items: center;">
+                                                <div class="lesson-dot" style="background: #eab308;"></div>
+                                                <span class="lesson-title" style="color: #eab308;">{{ $lesson->title }}</span>
+                                                <span class="badge-coming-soon" style="font-size: 0.65rem; background: #eab308; color: #000; padding: 1px 4px; border-radius: 4px; margin-left: auto; font-weight: bold;">Coming Soon</span>
+                                                <i class='bx bxs-lock-alt' style="margin-left: 8px; font-size: 0.9rem; color: #eab308;"></i>
+                                            </div>
+                                        @else
+                                            <a href="{{ $isLocked ? '#' : route('lessons.show', $lesson->id) }}"
+                                                class="lesson-card {{ $isCompleted ? 'completed' : '' }} {{ $isLocked ? 'locked' : '' }}">
+                                                <div class="lesson-dot"></div>
+                                                <span class="lesson-title">{{ $lesson->title }}</span>
+                                                @if($isLocked)
+                                                    <i class='bx bxs-lock-alt' style="margin-left: auto; font-size: 0.9rem; color: rgba(255,255,255,0.3);"></i>
+                                                @endif
+                                            </a>
+                                        @endif
                                     @endforeach
                                 </div>
                             </div>
                         @endforeach
+
+                        {{-- Unified Uji Pemahaman Node at the end of Submateri --}}
+                        @php
+                            $submateriLessons = collect();
+                            foreach ($submateri->chapters as $chap) {
+                                if ($chap->status === 'coming_soon') continue;
+                                foreach ($chap->lessons as $lsn) {
+                                    if ($lsn->status !== 'coming_soon') {
+                                        $submateriLessons->push($lsn->id);
+                                    }
+                                }
+                            }
+                            $completedCount = 0;
+                            foreach ($submateriLessons as $lsnId) {
+                                if (in_array($lsnId, $completedLessons)) {
+                                    $completedCount++;
+                                }
+                            }
+                            $allLessonsCompleted = $submateriLessons->count() > 0 && $completedCount === $submateriLessons->count();
+                            $isQuizPassed = in_array($submateri->id, auth()->user()->achievements['passed_submateri_quizzes'] ?? []);
+                            $isQuizLocked = !$allLessonsCompleted;
+                        @endphp
+                        <div class="chapter-group" style="margin-top: 2rem;">
+                            <div class="timeline-node" style="background: {{ $isQuizPassed ? 'var(--accent-green)' : ($isQuizLocked ? '#3f3f46' : 'var(--color-accent-amber)') }};"></div>
+
+                            <!-- Chapter Card style for Evaluasi -->
+                            <div class="chapter-card" style="border-color: {{ $isQuizPassed ? 'rgba(16, 185, 129, 0.2)' : ($isQuizLocked ? 'var(--border-color)' : 'rgba(251, 191, 36, 0.2)') }}; background: {{ $isQuizPassed ? 'rgba(16, 185, 129, 0.02)' : ($isQuizLocked ? 'rgba(255,255,255,0.01)' : 'rgba(251, 191, 36, 0.02)') }};">
+                                <div class="chapter-icon" style="background: {{ $isQuizPassed ? 'var(--accent-green)' : ($isQuizLocked ? '#3f3f46' : 'var(--color-accent-amber)') }}; color: #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem;">
+                                    <i class='bx bx-brain'></i>
+                                </div>
+                                <div class="chapter-text">
+                                    <h3 style="color: {{ $isQuizPassed ? 'var(--accent-green)' : ($isQuizLocked ? 'var(--text-muted)' : 'var(--color-accent-amber)') }}; font-weight: 700;">Evaluasi Akhir</h3>
+                                    <p style="color: #fff; font-size: 0.9rem;">Uji Pemahaman: {{ $submateri->title }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Quiz Card / Button -->
+                            <div class="lesson-list">
+                                @if($isQuizLocked)
+                                    <div class="lesson-card locked" style="opacity: 0.65; cursor: not-allowed; display: flex; align-items: center;">
+                                        <div class="lesson-dot" style="background: rgba(255, 255, 255, 0.2);"></div>
+                                        <span class="lesson-title" style="color: var(--text-muted);">Mulai Uji Pemahaman {{ $submateri->title }}</span>
+                                        <i class='bx bxs-lock-alt' style="margin-left: auto; font-size: 0.9rem; color: rgba(255,255,255,0.35);"></i>
+                                    </div>
+                                @else
+                                    <a href="{{ route('submateris.quiz.show', $submateri->id) }}"
+                                        class="lesson-card {{ $isQuizPassed ? 'completed' : '' }}" style="border-color: {{ $isQuizPassed ? 'rgba(16, 185, 129, 0.3)' : 'rgba(251, 191, 36, 0.3)' }};">
+                                        <div class="lesson-dot" style="background: {{ $isQuizPassed ? 'var(--accent-green)' : 'var(--color-accent-amber)' }};"></div>
+                                        <span class="lesson-title" style="color: #fff; font-weight: 600;">Mulai Uji Pemahaman {{ $submateri->title }}</span>
+                                        @if($isQuizPassed)
+                                            <span class="badge-completed" style="font-size: 0.65rem; background: var(--accent-green); color: #000; padding: 2px 6px; border-radius: 4px; margin-left: auto; font-weight: bold;">Selesai</span>
+                                        @else
+                                            <i class='bx bx-chevron-right' style="margin-left: auto; font-size: 1.2rem; color: var(--color-accent-amber);"></i>
+                                        @endif
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
             @endforeach
@@ -409,6 +499,67 @@
                                     jadwalmu</a>.</div>
                         </div>
                     @endforelse
+                </div>
+            </div>
+
+            @php
+                $nextLesson = null;
+                $totalCourseLessons = 0;
+                $completedCourseLessons = 0;
+
+                foreach ($course->submateris as $sm) {
+                    if ($sm->status === 'coming_soon') continue;
+                    foreach ($sm->chapters as $chapter) {
+                        if ($chapter->status === 'coming_soon') continue;
+                        foreach ($chapter->lessons as $lsn) {
+                            if ($lsn->status !== 'coming_soon') {
+                                $totalCourseLessons++;
+                                if (in_array($lsn->id, $completedLessons)) {
+                                    $completedCourseLessons++;
+                                } else {
+                                    if (!$nextLesson) {
+                                        $nextLesson = $lsn;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                $progressPercent = $totalCourseLessons > 0 ? min(100, round(($completedCourseLessons / $totalCourseLessons) * 100)) : 0;
+            @endphp
+
+            <!-- REKOMENDASI BELAJAR -->
+            <div class="buddy-rec-card" id="buddy-recommendation-card" style="margin-top: 1.5rem;">
+                <div class="buddy-rec-header">
+                    <span class="buddy-rec-icon">🎯</span>
+                    <span class="buddy-rec-tag">Rekomendasi Belajar</span>
+                </div>
+                <div class="buddy-rec-body">
+                    <div class="buddy-rec-course">{{ $course->title }}</div>
+                    @if($nextLesson)
+                        <div class="buddy-rec-lesson">Materi: {{ $nextLesson->title }}</div>
+
+                        <div class="buddy-rec-progress-wrapper">
+                            <div class="buddy-rec-progress-track">
+                                <div class="buddy-rec-progress-bar" style="width: {{ $progressPercent }}%;"></div>
+                            </div>
+                            <span class="buddy-rec-progress-text">Progress: {{ $progressPercent }}%</span>
+                        </div>
+
+                        <a href="{{ route('lessons.show', $nextLesson->id) }}" class="buddy-rec-btn">
+                            Mulai Belajar <i class="fas fa-arrow-right"></i>
+                        </a>
+                    @else
+                        <div class="buddy-rec-lesson">🎉 Semua materi kelas selesai!</div>
+
+                        <div class="buddy-rec-progress-wrapper">
+                            <div class="buddy-rec-progress-track">
+                                <div class="buddy-rec-progress-bar" style="width: 100%;"></div>
+                            </div>
+                            <span class="buddy-rec-progress-text">Progress: 100%</span>
+                        </div>
+                    @endif
                 </div>
             </div>
 

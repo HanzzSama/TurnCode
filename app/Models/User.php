@@ -167,4 +167,95 @@ class User extends Authenticatable implements MustVerifyEmail
         $progress = $exp - $floorExp;
         return min(100, max(0, round(($progress / $range) * 100)));
     }
+
+    public function getActiveCourse()
+    {
+        $focus = $this->focus;
+
+        // Legacy/Direct mappings
+        $courseTitle = match ($focus) {
+            'frontend' => 'Front End',
+            'backend' => 'Back End',
+            'fullstack' => 'Full Stack Dev',
+            'data-analyst' => 'Data Analyze',
+            default => null
+        };
+
+        if ($courseTitle) {
+            $course = \App\Models\Course::where('title', 'like', "%$courseTitle%")->first();
+            if ($course) {
+                return $course;
+            }
+        }
+
+        // If not found, let's find the focus model to get the proper name
+        $focusModel = \App\Models\Fokus::where('val', $focus)->first();
+        $targetTitle = $focusModel ? $focusModel->name : 'Front End';
+
+        // Check if there is an exact or similar course title
+        $course = \App\Models\Course::where('title', $targetTitle)
+            ->orWhere('title', 'like', "%$targetTitle%")
+            ->first();
+
+        if ($course) {
+            return $course;
+        }
+
+        // Create new Course dynamically
+        $course = \App\Models\Course::create([
+            'title' => $targetTitle,
+            'description' => $focusModel ? ($focusModel->desc ?? 'Pelajari keahlian baru di bidang ' . $focusModel->name) : 'Pelajari keahlian baru.',
+            'icon' => '🚀',
+            'color' => '#8b5cf6'
+        ]);
+
+        // Add a default Submateri
+        $submateri = \App\Models\Submateri::create([
+            'course_id' => $course->id,
+            'title' => 'Pengenalan ' . $targetTitle,
+            'description' => 'Mulai belajar dasar-dasar dari ' . $targetTitle . '.',
+            'icon' => '📖',
+            'order' => 1
+        ]);
+
+        // Add a default Chapter
+        $chapter = \App\Models\Chapter::create([
+            'submateri_id' => $submateri->id,
+            'title' => 'Dasar & Konsep ' . $targetTitle,
+            'order' => 1
+        ]);
+
+        // Add a couple of Lessons with Quizzes
+        $lesson1 = \App\Models\Lesson::create([
+            'chapter_id' => $chapter->id,
+            'title' => 'Apa itu ' . $targetTitle . '?',
+            'content' => '<h3>Pengenalan</h3><p>Selamat datang di kelas ' . $targetTitle . '! Di materi ini, kita akan mempelajari konsep dasar dan pentingnya keahlian ini di industri modern.</p>',
+            'order' => 1
+        ]);
+
+        \App\Models\Quiz::create([
+            'lesson_id' => $lesson1->id,
+            'question' => 'Apakah ' . $targetTitle . ' penting dipelajari?',
+            'options' => ['Ya, sangat penting', 'Tidak penting', 'Biasa saja', 'Kurang tahu'],
+            'correct_answer' => 'Ya, sangat penting',
+            'explanation' => $targetTitle . ' adalah salah satu keahlian yang sangat dibutuhkan di industri teknologi modern saat ini.'
+        ]);
+
+        $lesson2 = \App\Models\Lesson::create([
+            'chapter_id' => $chapter->id,
+            'title' => 'Memulai dengan ' . $targetTitle,
+            'content' => '<h3>Langkah Pertama</h3><p>Sekarang, saatnya mempersiapkan lingkungan kerja dan memahami dasar-dasar praktik terbaik untuk ' . $targetTitle . '.</p>',
+            'order' => 2
+        ]);
+
+        \App\Models\Quiz::create([
+            'lesson_id' => $lesson2->id,
+            'question' => 'Langkah pertama dalam mempelajari hal baru adalah...',
+            'options' => ['Konsisten berlatih', 'Langsung menyerah', 'Belajar 24 jam penuh', 'Menunda-nunda'],
+            'correct_answer' => 'Konsisten berlatih',
+            'explanation' => 'Konsistensi adalah kunci utama dalam menguasai keahlian baru secara mendalam.'
+        ]);
+
+        return $course;
+    }
 }

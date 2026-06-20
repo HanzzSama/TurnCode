@@ -53,29 +53,79 @@
             <div class="sidebar-chapter-title">BAB {{ $lesson->chapter->order }} : {{ $lesson->chapter->title }}</div>
             
             <div class="nav-list">
-                @php $canAccess = true; @endphp
+                @php 
+                    $canAccess = true; 
+                    $isLastChapter = $lesson->chapter->order === $lesson->chapter->submateri->chapters->max('order');
+                @endphp
                 @foreach($lesson->chapter->lessons as $lsn)
                     @php 
+                        $isLessonComingSoon = $lsn->status === 'coming_soon';
                         $isCompleted = in_array($lsn->id, $completedLessons); 
                         $isCurrent = $lsn->id == $lesson->id;
-                        $isQuiz = $lsn->quizzes->count() > 0 || str_contains(strtolower($lsn->title), 'quiz');
-                        $isLocked = !$canAccess;
+                        $isLocked = !$canAccess || $isLessonComingSoon;
                         
-                        if (!$isCompleted) {
+                        if (!$isCompleted && !$isLessonComingSoon) {
                             $canAccess = false;
                         }
                     @endphp
-                    <a href="{{ $isLocked ? '#' : route('lessons.show', $lsn->id) }}"
-                       class="nav-lesson {{ $isCurrent ? 'active' : '' }} {{ $isQuiz ? 'quiz-item' : '' }} {{ $isCompleted ? 'completed' : '' }} {{ $isLocked ? 'locked' : '' }}">
-                        <span class="nav-bullet"></span>
-                        <!-- Hidden text for backward compatibility with the JS checkmark script -->
-                        <span class="nav-lesson-icon-hidden">{{ $isCompleted ? '✓' : ($isCurrent ? '▶' : '○') }}</span>
-                        <span class="nav-lesson-title">{{ $lsn->title }}</span>
-                        @if($isLocked)
-                            <i class='bx bxs-lock-alt' style="margin-left: auto; font-size: 0.9rem; color: rgba(255,255,255,0.3);"></i>
-                        @endif
-                    </a>
+                    @if($isLessonComingSoon)
+                        <div class="nav-lesson locked coming-soon" style="opacity: 0.65; cursor: not-allowed; display: flex; align-items: center;">
+                            <span class="nav-bullet" style="background: #eab308;"></span>
+                            <span class="nav-lesson-title" style="color: #eab308;">{{ $lsn->title }}</span>
+                            <span class="badge-coming-soon" style="font-size: 0.6rem; background: #eab308; color: #000; padding: 1px 4px; border-radius: 4px; margin-left: auto; font-weight: bold;">Soon</span>
+                            <i class='bx bxs-lock-alt' style="margin-left: 6px; font-size: 0.9rem; color: #eab308;"></i>
+                        </div>
+                    @else
+                        <a href="{{ $isLocked ? '#' : route('lessons.show', $lsn->id) }}"
+                           class="nav-lesson {{ $isCurrent ? 'active' : '' }} {{ $isCompleted ? 'completed' : '' }} {{ $isLocked ? 'locked' : '' }}">
+                            <span class="nav-bullet"></span>
+                            <span class="nav-lesson-icon-hidden">{{ $isCompleted ? '✓' : ($isCurrent ? '▶' : '○') }}</span>
+                            <span class="nav-lesson-title">{{ $lsn->title }}</span>
+                            @if($isLocked)
+                                <i class='bx bxs-lock-alt' style="margin-left: auto; font-size: 0.9rem; color: rgba(255,255,255,0.35);"></i>
+                            @endif
+                        </a>
+                    @endif
                 @endforeach
+
+                @if($isLastChapter)
+                    @php
+                        $submateriLessons = collect();
+                        foreach ($lesson->chapter->submateri->chapters as $chap) {
+                            if ($chap->status === 'coming_soon') continue;
+                            foreach ($chap->lessons as $lsn) {
+                                if ($lsn->status !== 'coming_soon') {
+                                    $submateriLessons->push($lsn->id);
+                                }
+                            }
+                        }
+                        $completedCount = 0;
+                        foreach ($submateriLessons as $lsnId) {
+                            if (in_array($lsnId, $completedLessons)) {
+                                $completedCount++;
+                            }
+                        }
+                        $allLessonsCompleted = $submateriLessons->count() > 0 && $completedCount === $submateriLessons->count();
+                        $isQuizPassed = in_array($lesson->chapter->submateri->id, auth()->user()->achievements['passed_submateri_quizzes'] ?? []);
+                        $isQuizLocked = !$allLessonsCompleted;
+                    @endphp
+                    @if($isQuizLocked)
+                        <div class="nav-lesson locked" style="opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1.25rem;">
+                            <span class="nav-bullet" style="background: rgba(255,255,255,0.2);"></span>
+                            <span class="nav-lesson-title" style="color: var(--text-muted);">Uji Pemahaman</span>
+                            <i class='bx bxs-lock-alt' style="margin-left: auto; font-size: 0.9rem; color: rgba(255,255,255,0.35);"></i>
+                        </div>
+                    @else
+                        <a href="{{ route('submateris.quiz.show', $lesson->chapter->submateri->id) }}"
+                           class="nav-lesson quiz-item {{ $isQuizPassed ? 'completed' : '' }}" style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1.25rem;">
+                            <span class="nav-bullet" style="background: var(--color-accent-amber);"></span>
+                            <span class="nav-lesson-title" style="color: #fff;">Uji Pemahaman</span>
+                            @if($isQuizPassed)
+                                <i class='bx bx-check' style="margin-left: auto; font-size: 1.1rem; color: var(--accent-green);"></i>
+                            @endif
+                        </a>
+                    @endif
+                @endif
             </div>
         </aside>
 
@@ -122,172 +172,43 @@
                             {!! $lesson->content !!}
                         </div>
 
-                        @if($lesson->quizzes->count() > 0)
-                            @php $quiz = $lesson->quizzes->first(); @endphp
-                            <div class="quiz-section" id="quiz-section">
-                                <div class="lesson-divider"></div>
-                                <div class="quiz-header-row">
-                                    <div class="quiz-icon">💡</div>
-                                    <div class="quiz-title">Uji Pemahaman</div>
-                                </div>
+                        <div class="quiz-section">
+                            <div class="lesson-divider"></div>
+                            <div class="next-lesson" style="display:block;">
+                                @php
+                                    $hasNextLesson = isset($nextLesson) && $nextLesson;
+                                @endphp
 
-                                <div class="quiz-card">
-                                    <form id="quiz-form">
-                                        <div class="question">{{ $quiz->question }}</div>
-                                        <div class="options">
-                                            @php
-                                                $options = [];
-                                                if (is_array($quiz->options)) {
-                                                    $options = $quiz->options;
-                                                } elseif (is_string($quiz->options)) {
-                                                    $options = json_decode($quiz->options, true) ?: [];
-                                                }
-                                            @endphp
-                                            @foreach($options as $idx => $opt)
-                                                <label class="option-label">
-                                                    <input type="radio" name="answer" value="{{ $opt }}" class="option-input" required>
-                                                    <span>{{ $opt }}</span>
-                                                </label>
-                                            @endforeach
-                                        </div>
-                                        <button type="submit" class="btn-submit" id="submit-btn">Jawab Kuis</button>
-                                    </form>
-
-                                    <div id="feedback" class="feedback-alert"></div>
-
-                                    @php
-                                        // After answering quiz correctly: determine what comes next
-                                        $hasNextLesson = isset($nextLesson) && $nextLesson;
-                                        $chapterHasQuiz = $lesson->chapter->lessons->contains(function($l) {
-                                            return $l->quizzes->count() > 0 || str_contains(strtolower($l->title), 'quiz');
-                                        });
-                                    @endphp
-
-                                    <div class="next-lesson" id="next-lesson-btn">
-                                        @if($hasNextLesson)
-                                            <a href="{{ route('lessons.show', $nextLesson->id) }}" class="btn-next">Lanjut ke materi berikutnya</a>
-                                        @else
-                                            <a href="{{ route('courses.show', [$course->id, 'submateri_id' => $lesson->chapter->submateri->id]) }}" class="btn-next">Selesai</a>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        @else
-                            <div class="quiz-section">
-                                <div class="lesson-divider"></div>
-                                <div class="next-lesson" style="display:block;">
-                                    @php
-                                        $hasNextLesson = isset($nextLesson) && $nextLesson;
-                                        $nextIsQuiz = $hasNextLesson && ($nextLesson->quizzes->count() > 0 || str_contains(strtolower($nextLesson->title), 'quiz'));
-
-                                        // Check if any lesson in this chapter is a quiz
-                                        $chapterHasQuiz = $lesson->chapter->lessons->contains(function($l) {
-                                            return $l->quizzes->count() > 0 || str_contains(strtolower($l->title), 'quiz');
-                                        });
-                                    @endphp
-
-                                    @if(in_array($lesson->id, $completedLessons))
-                                        {{-- Already completed --}}
-                                        @if($hasNextLesson)
-                                            @if($nextIsQuiz)
-                                                <a href="{{ route('lessons.show', $nextLesson->id) }}" class="btn-next">Uji Pemahaman</a>
-                                            @else
-                                                <a href="{{ route('lessons.show', $nextLesson->id) }}" class="btn-next">Selesai</a>
-                                            @endif
-                                        @else
-                                            @if(!$chapterHasQuiz)
-                                                <button class="btn-next" style="width: 100%; background: rgba(255,255,255,0.1); color: #8b8591; cursor: not-allowed;" disabled>Coming Soon</button>
-                                            @else
-                                                <a href="{{ route('courses.show', [$course->id, 'submateri_id' => $lesson->chapter->submateri->id]) }}" class="btn-next">Selesai</a>
-                                            @endif
-                                        @endif
+                                @if(in_array($lesson->id, $completedLessons))
+                                    {{-- Already completed --}}
+                                    @if($hasNextLesson)
+                                        <a href="{{ route('lessons.show', $nextLesson->id) }}" class="btn-next">Lanjut ke materi berikutnya</a>
                                     @else
-                                        {{-- Not yet completed --}}
-                                        @if($hasNextLesson)
-                                            @if($nextIsQuiz)
-                                                <form action="{{ route('lessons.complete', $lesson->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn-next" style="width: 100%;">Uji Pemahaman</button>
-                                                </form>
-                                            @else
-                                                <form action="{{ route('lessons.complete', $lesson->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn-next" style="width: 100%;">Tandai selesai & Lanjut</button>
-                                                </form>
-                                            @endif
+                                        @php
+                                            $isQuizPassed = in_array($lesson->chapter->submateri->id, auth()->user()->achievements['passed_submateri_quizzes'] ?? []);
+                                        @endphp
+                                        @if($isQuizPassed)
+                                            <a href="{{ route('courses.show', [$course->id, 'submateri_id' => $lesson->chapter->submateri->id]) }}" class="btn-next">Kembali ke Halaman Kelas</a>
                                         @else
-                                            @if(!$chapterHasQuiz)
-                                                <form action="{{ route('lessons.complete', $lesson->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn-next" style="width: 100%; background: rgba(255,255,255,0.1); color: #8b8591;">Coming Soon</button>
-                                                </form>
-                                            @else
-                                                <form action="{{ route('lessons.complete', $lesson->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn-next" style="width: 100%;">Selesai</button>
-                                                </form>
-                                            @endif
+                                            <a href="{{ route('submateris.quiz.show', $lesson->chapter->submateri->id) }}" class="btn-next">Mulai Uji Pemahaman</a>
                                         @endif
                                     @endif
-                                </div>
+                                @else
+                                    {{-- Not yet completed --}}
+                                    @if($hasNextLesson)
+                                        <form action="{{ route('lessons.complete', $lesson->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn-next" style="width: 100%;">Tandai selesai & Lanjut</button>
+                                        </form>
+                                    @else
+                                        <form action="{{ route('lessons.complete', $lesson->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn-next" style="width: 100%;">Selesai & Mulai Uji Pemahaman</button>
+                                        </form>
+                                    @endif
+                                @endif
                             </div>
-                        @endif
-                    </div>
-                </main>
-            </div>
-        </main>
-    </div>
-
-    @if($lesson->quizzes->count() > 0)
-    <script>
-        document.getElementById('quiz-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const submitBtn = document.getElementById('submit-btn');
-            const feedback = document.getElementById('feedback');
-            const nextBtn = document.getElementById('next-lesson-btn');
-            const answer = document.querySelector('input[name="answer"]:checked').value;
-
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Mengecek...';
-
-            fetch('{{ route("lessons.quiz.submit", $lesson->id) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    quiz_id: {{ $quiz->id }},
-                    answer: answer
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                feedback.className = 'feedback-alert ' + (data.correct ? 'success' : 'error');
-                feedback.innerHTML = `<strong>${data.correct ? '✓ Benar!' : '✗ Kurang Tepat.'}</strong><br>${data.explanation || ''}`;
-
-                if(data.correct) {
-                    submitBtn.style.display = 'none';
-                    nextBtn.style.display = 'block';
-                    const activeIcon = document.querySelector('.nav-lesson.active .nav-lesson-icon-hidden');
-                    if(activeIcon) {
-                        activeIcon.textContent = '✓';
-                        activeIcon.parentElement.classList.add('completed');
-                    }
-                } else {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Coba Lagi';
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Jawab Kuis';
-            });
-        });
-    </script>
-    @endif
+                        </div>
     <script src="{{ asset('js/panel.js') }}"></script>
 </body>
 </html>

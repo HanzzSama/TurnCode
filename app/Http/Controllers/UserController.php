@@ -122,20 +122,7 @@ class UserController extends Controller
             }
         }
 
-        // Active Course & Lesson Recommendation
-        $focus = $user->focus;
-        $courseTitle = match($focus) {
-            'frontend' => 'Front End',
-            'backend' => 'Back End',
-            'fullstack' => 'Full Stack Dev',
-            'data-analyst' => 'Data Analyze',
-            default => 'Front End'
-        };
-
-        $userCourse = \App\Models\Course::where('title', 'like', "%$courseTitle%")->first();
-        if (!$userCourse) {
-            $userCourse = \App\Models\Course::first();
-        }
+        $userCourse = $user->getActiveCourse();
 
         $recommendation = [
             'has_recommendation' => false,
@@ -147,7 +134,17 @@ class UserController extends Controller
         ];
 
         if ($userCourse) {
-            $userCourse->load(['submateris.chapters.lessons']);
+            $userCourse->load([
+                'submateris' => function($q) {
+                    $q->where('status', '!=', 'draft')->orderBy('order');
+                },
+                'submateris.chapters' => function($q) {
+                    $q->where('status', '!=', 'draft')->orderBy('order');
+                },
+                'submateris.chapters.lessons' => function($q) {
+                    $q->where('status', '!=', 'draft')->orderBy('order');
+                }
+            ]);
             $completedLessons = $user->lessons()->pluck('lesson_id')->toArray();
             
             $totalCourseLessons = 0;
@@ -155,14 +152,18 @@ class UserController extends Controller
             $nextLesson = null;
             
             foreach ($userCourse->submateris as $submateri) {
+                if ($submateri->status === 'coming_soon') continue;
                 foreach ($submateri->chapters as $chapter) {
+                    if ($chapter->status === 'coming_soon') continue;
                     foreach ($chapter->lessons as $lsn) {
-                        $totalCourseLessons++;
-                        if (in_array($lsn->id, $completedLessons)) {
-                            $completedCourseLessons++;
-                        } else {
-                            if (!$nextLesson) {
-                                $nextLesson = $lsn;
+                        if ($lsn->status !== 'coming_soon') {
+                            $totalCourseLessons++;
+                            if (in_array($lsn->id, $completedLessons)) {
+                                $completedCourseLessons++;
+                            } else {
+                                if (!$nextLesson) {
+                                    $nextLesson = $lsn;
+                                }
                             }
                         }
                     }

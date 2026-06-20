@@ -35,7 +35,7 @@
                         <div class="panel-notif-item {{ $isUnread ? 'unread' : '' }}" 
                              data-id="{{ $notif->id }}" 
                              onclick="markNotificationAsRead(this, {{ $notif->id }})"
-                             style="cursor: pointer; position: relative;">
+                             style="cursor: pointer; position: relative; flex-shrink: 0;">
 
                             <div class="panel-notif-icon">
                                 <i class="bx {{ $iconName }}" style="font-size: 1.5rem; color: {{ $iconColor }};"></i>

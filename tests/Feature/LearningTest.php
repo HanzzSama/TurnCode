@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\Course;
+use App\Models\Submateri;
 use App\Models\Chapter;
 use App\Models\Lesson;
 use App\Models\Quiz;
@@ -23,7 +24,7 @@ class LearningTest extends TestCase
         ]);
     }
 
-    public function test_lesson_page_with_quiz_renders_successfully(): void
+    public function test_submateri_quiz_page_renders_successfully(): void
     {
         $user = $this->createOnboardedUser();
 
@@ -34,17 +35,19 @@ class LearningTest extends TestCase
             'color' => '#3b82f6',
         ]);
 
-        $submateri = \App\Models\Submateri::create([
+        $submateri = Submateri::create([
             'course_id' => $course->id,
             'title' => 'HTML',
             'icon' => '🌐',
             'order' => 1,
+            'status' => 'published',
         ]);
 
         $chapter = Chapter::create([
             'submateri_id' => $submateri->id,
             'title' => 'Tag Dasar',
             'order' => 1,
+            'status' => 'published',
         ]);
 
         $lesson = Lesson::create([
@@ -52,27 +55,38 @@ class LearningTest extends TestCase
             'title' => 'Mengenal Tag p',
             'content' => 'Paragraf tag',
             'order' => 1,
+            'status' => 'published',
         ]);
 
-        $quiz = Quiz::create([
+        $quiz1 = Quiz::create([
             'lesson_id' => $lesson->id,
+            'type' => 'text',
             'question' => 'Apa tag untuk paragraf?',
             'options' => ['p', 'div', 'span', 'section'],
             'correct_answer' => 'p',
             'explanation' => 'Tag p digunakan untuk mendefinisikan paragraf.',
         ]);
 
-        $response = $this->actingAs($user)->get(route('lessons.show', $lesson->id));
+        $quiz2 = Quiz::create([
+            'lesson_id' => $lesson->id,
+            'type' => 'puzzle',
+            'question' => 'Urutkan kode berikut:',
+            'options' => ['let x = 5;', 'console.log(x);'],
+            'correct_answer' => json_encode(['let x = 5;', 'console.log(x);']),
+            'explanation' => 'Mendeklarasikan variabel kemudian mencetaknya.',
+        ]);
+
+        // Complete the lesson to allow accessing the quiz
+        $user->lessons()->attach($lesson->id);
+
+        $response = $this->actingAs($user)->get(route('submateris.quiz.show', $submateri->id));
 
         $response->assertStatus(200);
         $response->assertSee('Apa tag untuk paragraf?');
-        $response->assertSee('p');
-        $response->assertSee('div');
-        $response->assertSee('span');
-        $response->assertSee('section');
+        $response->assertSee('Urutkan kode berikut:');
     }
 
-    public function test_lesson_page_quiz_submission(): void
+    public function test_submateri_quiz_submission(): void
     {
         $user = $this->createOnboardedUser();
 
@@ -83,17 +97,19 @@ class LearningTest extends TestCase
             'color' => '#3b82f6',
         ]);
 
-        $submateri = \App\Models\Submateri::create([
+        $submateri = Submateri::create([
             'course_id' => $course->id,
             'title' => 'HTML',
             'icon' => '🌐',
             'order' => 1,
+            'status' => 'published',
         ]);
 
         $chapter = Chapter::create([
             'submateri_id' => $submateri->id,
             'title' => 'Tag Dasar',
             'order' => 1,
+            'status' => 'published',
         ]);
 
         $lesson = Lesson::create([
@@ -101,40 +117,60 @@ class LearningTest extends TestCase
             'title' => 'Mengenal Tag p',
             'content' => 'Paragraf tag',
             'order' => 1,
+            'status' => 'published',
         ]);
 
-        $quiz = Quiz::create([
+        $quiz1 = Quiz::create([
             'lesson_id' => $lesson->id,
+            'type' => 'text',
             'question' => 'Apa tag untuk paragraf?',
             'options' => ['p', 'div', 'span', 'section'],
             'correct_answer' => 'p',
             'explanation' => 'Tag p digunakan untuk mendefinisikan paragraf.',
         ]);
 
-        // Submit correct answer
-        $response = $this->actingAs($user)->postJson(route('lessons.quiz.submit', $lesson->id), [
-            'quiz_id' => $quiz->id,
-            'answer' => 'p',
+        $quiz2 = Quiz::create([
+            'lesson_id' => $lesson->id,
+            'type' => 'puzzle',
+            'question' => 'Urutkan kode berikut:',
+            'options' => ['let x = 5;', 'console.log(x);'],
+            'correct_answer' => json_encode(['let x = 5;', 'console.log(x);']),
+            'explanation' => 'Mendeklarasikan variabel kemudian mencetaknya.',
+        ]);
+
+        // Complete the lesson to allow accessing the quiz
+        $user->lessons()->attach($lesson->id);
+
+        // Submit correct answers (quiz1 is MCQ, quiz2 is puzzle)
+        $response = $this->actingAs($user)->postJson(route('submateris.quiz.submit', $submateri->id), [
+            'answers' => [
+                $quiz1->id => 'p',
+                $quiz2->id => ['let x = 5;', 'console.log(x);']
+            ]
         ]);
 
         $response->assertStatus(200);
         $response->assertJson([
-            'correct' => true,
-            'explanation' => 'Tag p digunakan untuk mendefinisikan paragraf.',
+            'success' => true,
+            'passed' => true,
+            'correct_count' => 2,
+            'total_questions' => 2
         ]);
 
-        // Verify lesson completion in database
-        $this->assertTrue($user->lessons()->where('lesson_id', $lesson->id)->exists());
-
-        // Submit incorrect answer
-        $response = $this->actingAs($user)->postJson(route('lessons.quiz.submit', $lesson->id), [
-            'quiz_id' => $quiz->id,
-            'answer' => 'div',
+        // Submit incorrect answers
+        $response = $this->actingAs($user)->postJson(route('submateris.quiz.submit', $submateri->id), [
+            'answers' => [
+                $quiz1->id => 'div',
+                $quiz2->id => ['console.log(x);', 'let x = 5;']
+            ]
         ]);
 
         $response->assertStatus(200);
         $response->assertJson([
-            'correct' => false,
+            'success' => true,
+            'passed' => false,
+            'correct_count' => 0,
+            'total_questions' => 2
         ]);
     }
 }

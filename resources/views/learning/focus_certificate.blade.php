@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sertifikat Penyelesaian - {{ $submateri->title }}</title>
+    <title>Sertifikat Kelulusan Fokus - {{ $course->title }}</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="{{ asset('css/certificate.css') }}">
     <style>
         :root {
-            --coral: #fba293;
-            --mint: #64c4a5;
-            --olive: #ccd8c0;
-            --navy: #0c2340;
+            --coral: #d4af37; /* Premium Gold */
+            --mint: #10b981;  /* Emerald */
+            --olive: #b7a99a; /* Warm grey/bronze */
+            --navy: #0b1528;  /* Deep dark navy */
         }
     </style>
 </head>
 <body>
 
     <div class="toolbar">
-        <a href="{{ route('courses.show', [$submateri->course->id, 'submateri_id' => $submateri->id]) }}" class="btn-action btn-back">
-            <i class='bx bx-arrow-back'></i> Kembali
+        <a href="{{ route('dashboard') }}" class="btn-action btn-back">
+            <i class='bx bx-arrow-back'></i> Kembali ke Dashboard
         </a>
         <button onclick="window.print()" class="btn-action">
             <i class='bx bx-printer'></i> Cetak / Simpan PDF
@@ -36,15 +36,15 @@
                 </div>
 
                 <div class="cert-title-container">
-                    <span class="cert-title-badge">Certificate of Completion</span>
-                    <h1 class="cert-title">Sertifikat<br>Penyelesaian</h1>
+                    <span class="cert-title-badge">Focus Certificate of Graduation</span>
+                    <h1 class="cert-title">Sertifikat<br>Kelulusan</h1>
                 </div>
 
                 <div class="cert-recipient">{{ $user->name }}</div>
 
                 <div class="cert-description">
-                    Telah sukses menyelesaikan materi dan lulus uji pemahaman secara penuh pada bagian 
-                    <strong>{{ $submateri->title }}</strong> di program spesialisasi kelas {{ $courseTitle }}.
+                    Telah sukses menyelesaikan program evaluasi akhir dan dinyatakan lulus dari kelas spesialisasi fokus
+                    <strong>{{ $course->title }}</strong> sebagai bukti penguasaan materi teoretis dan pemahaman logika pemrograman secara mendalam.
                 </div>
 
                 <div class="cert-footer">
@@ -56,11 +56,11 @@
                             @endphp
                         </div>
                         <div class="signature-line" style="margin-top: 8px;"></div>
-                        <p class="signature-title">Tanggal Penyelesaian</p>
+                        <p class="signature-title">Tanggal Kelulusan</p>
                     </div>
 
                     <div class="signature-block">
-                        <div class="signature-handwriting">HanzzSama</div>
+                        <div class="signature-handwriting" style="color: var(--coral);">HanzzSama</div>
                         <div class="signature-line"></div>
                         <p class="signature-name">HanzzSama</p>
                         <p class="signature-title">Founder TurnCode</p>

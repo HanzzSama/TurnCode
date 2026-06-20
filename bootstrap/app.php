@@ -15,6 +15,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'onboarding' => \App\Http\Middleware\EnsureOnboardingCompleted::class,
             'admin.auth' => \App\Http\Middleware\AdminAuthMiddleware::class,
         ]);
+        
+        $middleware->trimStrings(except: [
+            fn (\Illuminate\Http\Request $request) => $request->is('admin/*') || $request->is('submateri/*/quiz/submit')
+        ]);
+
+        $middleware->convertEmptyStringsToNull(except: [
+            fn (\Illuminate\Http\Request $request) => $request->is('admin/*') || $request->is('submateri/*/quiz/submit')
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

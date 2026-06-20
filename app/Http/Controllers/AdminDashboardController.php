@@ -45,10 +45,12 @@ class AdminDashboardController extends Controller
         $fokusList = Fokus::orderBy('interest_val')->orderBy('name')->get();
         
         // Newly added lists for Submateri and Quiz tabs
-        $submateris = Submateri::with('course')->orderBy('course_id')->orderBy('order')->get();
+        $submateris = Submateri::with(['course', 'chapters.lessons'])->orderBy('course_id')->orderBy('order')->get();
         $courses = Course::orderBy('title')->get();
-        $lessons = Lesson::orderBy('title')->get();
+        $chapters = Chapter::with('submateri.course')->orderBy('submateri_id')->orderBy('order')->get();
+        $lessons = Lesson::with('chapter.submateri.course')->orderBy('chapter_id')->orderBy('order')->get();
         $quizzes = Quiz::with('lesson.chapter.submateri.course')->orderBy('id', 'desc')->get();
+        $activeSubtab = $request->query('subtab', 'submateri-main');
 
         // Leaderboard / Paginated users list for the table
         $paginatedUsers = User::orderBy('exp', 'desc')->paginate(10);
@@ -183,10 +185,12 @@ class AdminDashboardController extends Controller
             'fokusList',
             'submateris',
             'courses',
+            'chapters',
             'lessons',
             'quizzes',
             'paginatedUsers',
             'activeTab',
+            'activeSubtab',
             'dbTables',
             'tablesDetail'
         ));
@@ -302,10 +306,11 @@ class AdminDashboardController extends Controller
             'title'       => 'required|string|max:100',
             'description' => 'nullable|string',
             'icon'        => 'nullable|string|max:50',
-            'order'       => 'required|integer|min:0'
+            'order'       => 'required|integer|min:0',
+            'status'      => 'required|in:published,draft,coming_soon'
         ]);
 
-        Submateri::create($request->only(['course_id', 'title', 'description', 'icon', 'order']));
+        Submateri::create($request->only(['course_id', 'title', 'description', 'icon', 'order', 'status']));
 
         return redirect()->route('admin.dashboard', ['tab' => 'submateri'])->with('success', "Sub Materi \"{$request->title}\" berhasil ditambahkan.");
     }
@@ -317,10 +322,11 @@ class AdminDashboardController extends Controller
             'title'       => 'required|string|max:100',
             'description' => 'nullable|string',
             'icon'        => 'nullable|string|max:50',
-            'order'       => 'required|integer|min:0'
+            'order'       => 'required|integer|min:0',
+            'status'      => 'required|in:published,draft,coming_soon'
         ]);
 
-        $submateri->update($request->only(['course_id', 'title', 'description', 'icon', 'order']));
+        $submateri->update($request->only(['course_id', 'title', 'description', 'icon', 'order', 'status']));
 
         return redirect()->route('admin.dashboard', ['tab' => 'submateri'])->with('success', "Sub Materi \"{$submateri->title}\" berhasil diperbarui.");
     }
@@ -364,33 +370,220 @@ class AdminDashboardController extends Controller
         return redirect()->route('admin.dashboard', ['tab' => 'submateri'])->with('success', "Sub Materi \"{$title}\" berhasil dihapus.");
     }
 
+    // ─── CHAPTER CRUD ───
+
+    public function storeChapter(Request $request)
+    {
+        $request->validate([
+            'submateri_id' => 'required|exists:submateris,id',
+            'title'        => 'required|string|max:100',
+            'order'        => 'required|integer|min:0',
+            'status'       => 'required|in:published,draft,coming_soon'
+        ]);
+
+        Chapter::create($request->only(['submateri_id', 'title', 'order', 'status']));
+
+        return redirect()->route('admin.dashboard', ['tab' => 'submateri', 'subtab' => 'bab'])->with('success', "Bab \"{$request->title}\" berhasil ditambahkan.");
+    }
+
+    public function updateChapter(Request $request, Chapter $chapter)
+    {
+        $request->validate([
+            'submateri_id' => 'required|exists:submateris,id',
+            'title'        => 'required|string|max:100',
+            'order'        => 'required|integer|min:0',
+            'status'       => 'required|in:published,draft,coming_soon'
+        ]);
+
+        $chapter->update($request->only(['submateri_id', 'title', 'order', 'status']));
+
+        return redirect()->route('admin.dashboard', ['tab' => 'submateri', 'subtab' => 'bab'])->with('success', "Bab \"{$chapter->title}\" berhasil diperbarui.");
+    }
+
+    public function deleteChapter(Chapter $chapter)
+    {
+        $title = $chapter->title;
+        $chapter->delete();
+
+        return redirect()->route('admin.dashboard', ['tab' => 'submateri', 'subtab' => 'bab'])->with('success', "Bab \"{$title}\" berhasil dihapus.");
+    }
+
+    // ─── LESSON CRUD ───
+
+    public function storeLesson(Request $request)
+    {
+        $request->validate([
+            'chapter_id' => 'required|exists:chapters,id',
+            'title'      => 'required|string|max:100',
+            'content'    => 'nullable|string',
+            'order'      => 'required|integer|min:0',
+            'status'     => 'required|in:published,draft,coming_soon'
+        ]);
+
+        Lesson::create($request->only(['chapter_id', 'title', 'content', 'order', 'status']));
+
+        return redirect()->route('admin.dashboard', ['tab' => 'submateri', 'subtab' => 'halaman'])->with('success', "Halaman \"{$request->title}\" berhasil ditambahkan.");
+    }
+
+    public function updateLesson(Request $request, Lesson $lesson)
+    {
+        $request->validate([
+            'chapter_id' => 'required|exists:chapters,id',
+            'title'      => 'required|string|max:100',
+            'content'    => 'nullable|string',
+            'order'      => 'required|integer|min:0',
+            'status'     => 'required|in:published,draft,coming_soon'
+        ]);
+
+        $lesson->update($request->only(['chapter_id', 'title', 'content', 'order', 'status']));
+
+        return redirect()->route('admin.dashboard', ['tab' => 'submateri', 'subtab' => 'halaman'])->with('success', "Halaman \"{$lesson->title}\" berhasil diperbarui.");
+    }
+
+    public function deleteLesson(Lesson $lesson)
+    {
+        $title = $lesson->title;
+        $lesson->delete();
+
+        return redirect()->route('admin.dashboard', ['tab' => 'submateri', 'subtab' => 'halaman'])->with('success', "Halaman \"{$title}\" berhasil dihapus.");
+    }
+
     // ─── QUIZ CRUD ───
 
     public function storeQuiz(Request $request)
     {
+        if ($request->has('questions')) {
+            $request->validate([
+                'questions' => 'required|array|min:1',
+                'questions.*.lesson_id' => 'required|exists:lessons,id',
+                'questions.*.type' => 'required|in:text,code,puzzle,code_writing',
+                'questions.*.question' => 'required|string',
+                'questions.*.image_url' => 'nullable|string',
+                'questions.*.video_url' => 'nullable|string',
+                'questions.*.code_block' => 'nullable|string',
+                'questions.*.explanation' => 'nullable|string',
+            ]);
+
+            $count = 0;
+            foreach ($request->questions as $qData) {
+                $type = $qData['type'] ?? 'text';
+                $options = [];
+                $correctAnswer = '';
+
+                if ($type === 'puzzle') {
+                    $linesRaw = $qData['puzzle_lines'] ?? '';
+                    $lines = array_filter(array_map('trim', explode("\n", $linesRaw)));
+                    if (count($lines) < 2) {
+                        return redirect()->back()->withErrors(['questions' => 'Puzzle harus memiliki minimal 2 baris kode.'])->withInput();
+                    }
+                    $correctAnswer = json_encode(array_values($lines));
+                    $scrambled = $lines;
+                    shuffle($scrambled);
+                    if ($scrambled === $lines && count($lines) > 1) {
+                        shuffle($scrambled);
+                    }
+                    $options = array_values($scrambled);
+                } elseif ($type === 'code_writing') {
+                    $correctAnswer = trim($qData['correct_answer_code'] ?? '');
+                    $options = [];
+                } else {
+                    $options = [
+                        trim($qData['option_a'] ?? ''),
+                        trim($qData['option_b'] ?? ''),
+                        trim($qData['option_c'] ?? ''),
+                        trim($qData['option_d'] ?? '')
+                    ];
+                    $correctKey = $qData['correct_answer'] ?? 'a';
+                    $correctAnswer = match($correctKey) {
+                        'b' => $options[1],
+                        'c' => $options[2],
+                        'd' => $options[3],
+                        default => $options[0]
+                    };
+                }
+
+                Quiz::create([
+                    'lesson_id' => $qData['lesson_id'],
+                    'type' => $type,
+                    'question' => $qData['question'],
+                    'image_url' => $qData['image_url'] ?? null,
+                    'video_url' => $qData['video_url'] ?? null,
+                    'code_block' => $qData['code_block'] ?? null,
+                    'options' => $options,
+                    'correct_answer' => $correctAnswer,
+                    'explanation' => $qData['explanation'] ?? null,
+                ]);
+                $count++;
+            }
+
+            return redirect()->route('admin.dashboard', ['tab' => 'quizzes'])->with('success', "{$count} soal kuis baru berhasil ditambahkan.");
+        }
+
+        // Single question fallback
         $request->validate([
             'lesson_id'      => 'required|exists:lessons,id',
+            'type'           => 'required|in:text,code,puzzle',
             'question'       => 'required|string',
-            'correct_answer' => 'required|string',
+            'image_url'      => 'nullable|string',
+            'video_url'      => 'nullable|string',
+            'code_block'     => 'nullable|string',
             'explanation'    => 'nullable|string',
-            'option_a'       => 'required|string',
-            'option_b'       => 'required|string',
-            'option_c'       => 'required|string',
-            'option_d'       => 'required|string',
         ]);
 
-        $options = [
-            $request->option_a,
-            $request->option_b,
-            $request->option_c,
-            $request->option_d
-        ];
+        $type = $request->input('type', 'text');
+        $options = [];
+        $correctAnswer = '';
+
+        if ($type === 'puzzle') {
+            $linesRaw = $request->input('puzzle_lines', '');
+            $lines = array_filter(array_map('trim', explode("\n", $linesRaw)));
+            if (count($lines) < 2) {
+                return redirect()->back()->withErrors(['puzzle_lines' => 'Puzzle harus memiliki minimal 2 baris kode.'])->withInput();
+            }
+            $correctAnswer = json_encode(array_values($lines));
+            $scrambled = $lines;
+            shuffle($scrambled);
+            if ($scrambled === $lines && count($lines) > 1) {
+                shuffle($scrambled);
+            }
+            $options = array_values($scrambled);
+        } elseif ($type === 'code_writing') {
+            $correctAnswer = trim($request->input('correct_answer_code', ''));
+            $options = [];
+        } else {
+            $request->validate([
+                'option_a'       => 'required|string',
+                'option_b'       => 'required|string',
+                'option_c'       => 'required|string',
+                'option_d'       => 'required|string',
+                'correct_answer' => 'required|string',
+            ]);
+
+            $options = [
+                trim($request->option_a),
+                trim($request->option_b),
+                trim($request->option_c),
+                trim($request->option_d)
+            ];
+
+            $correctKey = $request->correct_answer;
+            $correctAnswer = match($correctKey) {
+                'b' => $options[1],
+                'c' => $options[2],
+                'd' => $options[3],
+                default => $options[0]
+            };
+        }
 
         Quiz::create([
             'lesson_id'      => $request->lesson_id,
+            'type'           => $type,
             'question'       => $request->question,
+            'image_url'      => $request->image_url,
+            'video_url'      => $request->video_url,
+            'code_block'     => $request->code_block,
             'options'        => $options,
-            'correct_answer' => $request->correct_answer,
+            'correct_answer' => $correctAnswer,
             'explanation'    => $request->explanation,
         ]);
 
@@ -401,27 +594,72 @@ class AdminDashboardController extends Controller
     {
         $request->validate([
             'lesson_id'      => 'required|exists:lessons,id',
+            'type'           => 'required|in:text,code,puzzle,code_writing',
             'question'       => 'required|string',
-            'correct_answer' => 'required|string',
+            'image_url'      => 'nullable|string',
+            'video_url'      => 'nullable|string',
+            'code_block'     => 'nullable|string',
             'explanation'    => 'nullable|string',
-            'option_a'       => 'required|string',
-            'option_b'       => 'required|string',
-            'option_c'       => 'required|string',
-            'option_d'       => 'required|string',
         ]);
 
-        $options = [
-            $request->option_a,
-            $request->option_b,
-            $request->option_c,
-            $request->option_d
-        ];
+        $type = $request->input('type', 'text');
+        $options = [];
+        $correctAnswer = '';
+
+        if ($type === 'puzzle') {
+            $linesRaw = $request->input('puzzle_lines', '');
+            $lines = array_filter(array_map('trim', explode("\n", $linesRaw)));
+            if (count($lines) < 2) {
+                return redirect()->back()->withErrors(['puzzle_lines' => 'Puzzle harus memiliki minimal 2 baris kode.'])->withInput();
+            }
+            $correctAnswer = json_encode(array_values($lines));
+            $scrambled = $lines;
+            shuffle($scrambled);
+            if ($scrambled === $lines && count($lines) > 1) {
+                shuffle($scrambled);
+            }
+            $options = array_values($scrambled);
+        } elseif ($type === 'code_writing') {
+            $correctAnswer = trim($request->input('correct_answer_code', ''));
+            $options = [];
+        } else {
+            $request->validate([
+                'option_a'       => 'required|string',
+                'option_b'       => 'required|string',
+                'option_c'       => 'required|string',
+                'option_d'       => 'required|string',
+                'correct_answer' => 'required|string',
+            ]);
+
+            $options = [
+                trim($request->option_a),
+                trim($request->option_b),
+                trim($request->option_c),
+                trim($request->option_d)
+            ];
+
+            $correctKey = $request->correct_answer;
+            if (in_array($correctKey, ['a', 'b', 'c', 'd'])) {
+                $correctAnswer = match($correctKey) {
+                    'b' => $options[1],
+                    'c' => $options[2],
+                    'd' => $options[3],
+                    default => $options[0]
+                };
+            } else {
+                $correctAnswer = trim($correctKey);
+            }
+        }
 
         $quiz->update([
             'lesson_id'      => $request->lesson_id,
+            'type'           => $type,
             'question'       => $request->question,
+            'image_url'      => $request->image_url,
+            'video_url'      => $request->video_url,
+            'code_block'     => $request->code_block,
             'options'        => $options,
-            'correct_answer' => $request->correct_answer,
+            'correct_answer' => $correctAnswer,
             'explanation'    => $request->explanation,
         ]);
 

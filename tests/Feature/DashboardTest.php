@@ -36,20 +36,23 @@ class DashboardTest extends TestCase
             'title' => 'HTML',
             'description' => 'HTML dasar',
             'icon' => '🌐',
-            'order' => 1
+            'order' => 1,
+            'status' => 'published'
         ]);
 
         $ch1 = Chapter::create([
             'submateri_id' => $this->feSubHTML->id,
             'title' => 'Dasar HTML',
-            'order' => 1
+            'order' => 1,
+            'status' => 'published'
         ]);
 
         Lesson::create([
             'chapter_id' => $ch1->id,
             'title' => 'Membangun Struktur Web',
             'content' => 'HTML intro',
-            'order' => 1
+            'order' => 1,
+            'status' => 'published'
         ]);
 
         // 2. Create Back End Course & Submateri
@@ -65,20 +68,23 @@ class DashboardTest extends TestCase
             'title' => 'PHP',
             'description' => 'PHP dasar',
             'icon' => '🐘',
-            'order' => 1
+            'order' => 1,
+            'status' => 'published'
         ]);
 
         $ch2 = Chapter::create([
             'submateri_id' => $this->beSubPHP->id,
             'title' => 'Sintaks PHP',
-            'order' => 1
+            'order' => 1,
+            'status' => 'published'
         ]);
 
         Lesson::create([
             'chapter_id' => $ch2->id,
             'title' => 'Variabel PHP',
             'content' => 'PHP intro',
-            'order' => 1
+            'order' => 1,
+            'status' => 'published'
         ]);
     }
 
@@ -94,12 +100,15 @@ class DashboardTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Front End');
-        $response->assertSee('HTML');
-        $response->assertSee('Membangun Struktur Web');
+        $response->assertSee('collapsed-text">HTML', false);
 
-        // Should not see backend course materials
-        $response->assertDontSee('PHP');
-        $response->assertDontSee('Variabel PHP');
+        // Should not see backend course materials in materials list
+        $response->assertDontSee('collapsed-text">PHP', false);
+
+        // Check lessons on the course detail page
+        $courseResponse = $this->actingAs($user)->get(route('courses.show', $this->feCourse->id));
+        $courseResponse->assertStatus(200);
+        $courseResponse->assertSee('Membangun Struktur Web');
     }
 
     public function test_dashboard_displays_backend_course_submaterials_for_backend_focused_user(): void
@@ -114,11 +123,14 @@ class DashboardTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Back End');
-        $response->assertSee('PHP');
-        $response->assertSee('Variabel PHP');
+        $response->assertSee('collapsed-text">PHP', false);
 
-        // Should not see frontend course materials
-        $response->assertDontSee('HTML');
-        $response->assertDontSee('Membangun Struktur Web');
+        // Should not see frontend course materials in materials list
+        $response->assertDontSee('collapsed-text">HTML', false);
+
+        // Check lessons on the course detail page
+        $courseResponse = $this->actingAs($user)->get(route('courses.show', $this->beCourse->id));
+        $courseResponse->assertStatus(200);
+        $courseResponse->assertSee('Variabel PHP');
     }
 }

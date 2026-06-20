@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,6 +24,7 @@
         })();
     </script>
 </head>
+
 <body>
     <!-- SIDEBAR WRAPPER -->
     <div class="sidebar-wrapper" id="adminSidebar">
@@ -539,13 +541,14 @@
                                                     data-id="{{ $int->id }}" data-name="{{ $int->name }}"
                                                     data-desc="{{ $int->desc }}" data-icon="{{ $int->icon }}"
                                                     onclick="setInterestEditMode(
-                                                                                                                                                                                                                this.getAttribute('data-id'),
-                                                                                                                                                                                                                this.getAttribute('data-name'),
-                                                                                                                                                                                                                this.getAttribute('data-desc'),
-                                                                                                                                                                                                                this.getAttribute('data-icon')
-                                                                                                                                                                                                            )">Edit</button>
+                                                                                                                                                                                                                                this.getAttribute('data-id'),
+                                                                                                                                                                                                                                this.getAttribute('data-name'),
+                                                                                                                                                                                                                                this.getAttribute('data-desc'),
+                                                                                                                                                                                                                                this.getAttribute('data-icon')
+                                                                                                                                                                                                                            )">Edit</button>
                                                 <form action="{{ route('admin.interests.delete', $int->id) }}" method="POST"
-                                                    onsubmit="return confirm('Hapus interest {{ addslashes($int->name) }}?');">
+                                                    data-confirm-message="Hapus interest {{ addslashes($int->name) }}?"
+                                                    data-confirm-btn="Hapus Interest">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
@@ -676,15 +679,16 @@
                                                     data-name="{{ $fk->name }}" data-desc="{{ $fk->desc }}"
                                                     data-icon="{{ $fk->icon }}" data-tags="{{ $fk->tags }}"
                                                     onclick="setFokusEditMode(
-                                                                                                                                                                                                                this.getAttribute('data-id'),
-                                                                                                                                                                                                                this.getAttribute('data-interest-val'),
-                                                                                                                                                                                                                this.getAttribute('data-name'),
-                                                                                                                                                                                                                this.getAttribute('data-desc'),
-                                                                                                                                                                                                                this.getAttribute('data-icon'),
-                                                                                                                                                                                                                this.getAttribute('data-tags')
-                                                                                                                                                                                                            )">Edit</button>
+                                                                                                                                                                                                                                this.getAttribute('data-id'),
+                                                                                                                                                                                                                                this.getAttribute('data-interest-val'),
+                                                                                                                                                                                                                                this.getAttribute('data-name'),
+                                                                                                                                                                                                                                this.getAttribute('data-desc'),
+                                                                                                                                                                                                                                this.getAttribute('data-icon'),
+                                                                                                                                                                                                                                this.getAttribute('data-tags')
+                                                                                                                                                                                                                            )">Edit</button>
                                                 <form action="{{ route('admin.fokus.delete', $fk->id) }}" method="POST"
-                                                    onsubmit="return confirm('Hapus fokus {{ addslashes($fk->name) }}?');">
+                                                    data-confirm-message="Hapus fokus {{ addslashes($fk->name) }}?"
+                                                    data-confirm-btn="Hapus Fokus">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
@@ -716,198 +720,608 @@
                     <p class="section-subtitle">Kelola materi sub-materi belajar yang terkait dengan Modul Utama
                         (Course)</p>
                 </div>
-                <div class="management-layout">
-                    <!-- Form Input Data (Left Column) -->
-                    <div class="form-card-premium">
-                        <h3 class="form-card-title" id="submateriFormTitle">Tambah Sub Materi</h3>
-                        <p class="form-card-subtitle" id="submateriFormSubtitle">Masukkan data untuk menambahkan sub
-                            materi belajar baru</p>
-                        <form action="{{ route('admin.submateri.store') }}" method="POST" id="submateriForm">
-                            @csrf
-                            <input type="hidden" name="_method" value="POST" id="submateriMethodInput">
-                            <!-- Metadata fields -->
-                            <div class="form-grid-inputs" style="margin-bottom: 20px;">
-                                <div class="form-group">
-                                    <label class="form-label" for="submateriInputCourseId">Modul Utama (Course)</label>
-                                    <select class="form-select" name="course_id" id="submateriInputCourseId" required>
-                                        <option value="">-- Pilih Modul Utama --</option>
-                                        @foreach($courses as $c)
-                                            <option value="{{ $c->id }}">{{ $c->title }}</option>
-                                        @endforeach
-                                    </select>
+
+                <!-- Sub-tabs Switcher Navigation -->
+                <div class="sub-tabs-navigation"
+                    style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                    <button type="button" class="sub-tab-btn {{ $activeSubtab === 'submateri-main' ? 'active' : '' }}"
+                        onclick="switchSubmateriTab(this, 'submateri-main')">
+                        Kelola Submateri
+                    </button>
+                    <button type="button" class="sub-tab-btn {{ $activeSubtab === 'bab' ? 'active' : '' }}"
+                        onclick="switchSubmateriTab(this, 'bab')">
+                        Kelola Bab
+                    </button>
+                    <button type="button" class="sub-tab-btn {{ $activeSubtab === 'halaman' ? 'active' : '' }}"
+                        onclick="switchSubmateriTab(this, 'halaman')">
+                        Kelola Halaman (Sesi)
+                    </button>
+                </div>
+
+                <!-- Sub-tab Panel 1: Submateri Main -->
+                <div class="sub-tab-panel {{ $activeSubtab === 'submateri-main' ? 'active' : '' }}" id="sub-panel-main"
+                    style="display: {{ $activeSubtab === 'submateri-main' ? 'block' : 'none' }}">
+                    <div class="management-layout">
+                        <!-- Form Input Data (Left Column) -->
+                        <div class="form-card-premium">
+                            <h3 class="form-card-title" id="submateriFormTitle">Tambah Sub Materi</h3>
+                            <p class="form-card-subtitle" id="submateriFormSubtitle">Masukkan data untuk menambahkan sub
+                                materi belajar baru</p>
+                            <form action="{{ route('admin.submateri.store') }}" method="POST" id="submateriForm">
+                                @csrf
+                                <input type="hidden" name="_method" value="POST" id="submateriMethodInput">
+                                <!-- Metadata fields -->
+                                <div class="form-grid-inputs" style="margin-bottom: 20px;">
+                                    <div class="form-group">
+                                        <label class="form-label" for="submateriInputCourseId">Modul Utama
+                                            (Course)</label>
+                                        <select class="form-select" name="course_id" id="submateriInputCourseId"
+                                            required>
+                                            <option value="">-- Pilih Modul Utama --</option>
+                                            @foreach($courses as $c)
+                                                <option value="{{ $c->id }}">{{ $c->title }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="submateriInputIcon">Icon (Emoji /
+                                            Karakter)</label>
+                                        <input class="form-input" type="text" name="icon" id="submateriInputIcon"
+                                            placeholder="e.g. 🌐 atau 🐘">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="submateriInputOrder">Urutan (Order)</label>
+                                        <input class="form-input" type="number" name="order" id="submateriInputOrder"
+                                            value="1" min="0" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="submateriInputStatus">Status</label>
+                                        <select class="form-select" name="status" id="submateriInputStatus" required>
+                                            <option value="published">Publish</option>
+                                            <option value="draft">Draft</option>
+                                            <option value="coming_soon">Coming Soon</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="submateriInputIcon">Icon (Emoji / Karakter)</label>
-                                    <input class="form-input" type="text" name="icon" id="submateriInputIcon"
-                                        placeholder="e.g. 🌐 atau 🐘">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="submateriInputOrder">Urutan (Order)</label>
-                                    <input class="form-input" type="number" name="order" id="submateriInputOrder"
-                                        value="1" min="0" required>
-                                </div>
-                            </div>
-                            <!-- Document Editor Sheet -->
-                            <div class="document-editor">
-                                <!-- Word-like Toolbar -->
-                                <div class="doc-toolbar">
-                                    <!-- History -->
-                                    <button type="button" class="doc-toolbar-btn" onclick="formatDoc('undo')"
-                                        title="Undo (Ctrl+Z)">↶</button>
-                                    <button type="button" class="doc-toolbar-btn" onclick="formatDoc('redo')"
-                                        title="Redo (Ctrl+Y)">↷</button>
-                                    <div class="doc-toolbar-divider"></div>
-                                    <!-- Styling -->
-                                    <button type="button" class="doc-toolbar-btn" style="font-weight: bold;"
-                                        onclick="formatDoc('bold')" title="Tebal (Ctrl+B)">B</button>
-                                    <button type="button" class="doc-toolbar-btn" style="font-style: italic;"
-                                        onclick="formatDoc('italic')" title="Miring (Ctrl+I)">I</button>
-                                    <button type="button" class="doc-toolbar-btn" style="text-decoration: underline;"
-                                        onclick="formatDoc('underline')" title="Garis Bawah (Ctrl+U)">U</button>
-                                    <div class="doc-toolbar-divider"></div>
-                                    <!-- Blocks -->
-                                    <button type="button" class="doc-toolbar-btn"
-                                        style="font-weight: bold; font-size:11px;" onclick="addDocBlock('p')"
-                                        title="Paragraf (P)">P</button>
-                                    <button type="button" class="doc-toolbar-btn"
-                                        style="font-weight: 700; font-size:11px;" onclick="addDocBlock('h2')"
-                                        title="Judul Utama (H2)">H2</button>
-                                    <button type="button" class="doc-toolbar-btn"
-                                        style="font-weight: 600; font-size:11px;" onclick="addDocBlock('h3')"
-                                        title="Subjudul (H3)">H3</button>
-                                    <button type="button" class="doc-toolbar-btn" onclick="addDocBlock('blockquote')"
-                                        title="Kutipan">“ ”</button>
-                                    <div class="doc-toolbar-divider"></div>
-                                    <!-- Insert tools -->
-                                    <button type="button" class="doc-toolbar-btn" onclick="addDocBlock('pre')"
-                                        title="Sisipkan Kode Block">&lt;/&gt;</button>
-                                    <button type="button" class="doc-toolbar-btn" onclick="insertTableBlock()"
-                                        title="Sisipkan Tabel">田</button>
-                                    <button type="button" class="doc-toolbar-btn"
-                                        onclick="addDocBlock('ul', '<li>Butir list...</li>')" title="Point List Bab">•
-                                        List</button>
-                                    <button type="button" class="doc-toolbar-btn"
-                                        onclick="addDocBlock('ol', '<li>Butir list...</li>')"
-                                        title="Point List Number">1. List</button>
-                                    <div class="doc-toolbar-divider"></div>
-                                    <!-- Media & Others -->
-                                    <button type="button" class="doc-toolbar-btn" onclick="addDocBlock('image')"
-                                        title="Sisipkan Gambar" style="font-size: 11px;">▣ Gambar</button>
-                                    <button type="button" class="doc-toolbar-btn" onclick="addDocBlock('video')"
-                                        title="Sisipkan Video" style="font-size: 11px;">▶ Video</button>
-                                    <button type="button" class="doc-toolbar-btn" onclick="addDocBlock('callout')"
-                                        title="Sisipkan Info Box" style="font-size: 11px;">ⓘ Info Box</button>
-                                    <div class="doc-toolbar-divider"></div>
-                                    <div class="doc-toolbar-divider"></div>
-                                    <!-- Clear -->
-                                    <button type="button" class="doc-toolbar-btn" onclick="formatDoc('removeFormat')"
-                                        title="Hapus Format">Tx</button>
-                                </div>
-                                <!-- Main Editor Container (Sheet and Sidebar) -->
-                                <div class="doc-main-container">
-                                    <!-- Document Sheet Page -->
-                                    <div class="doc-sheet-container">
-                                        <div class="doc-sheet">
-                                            <!-- Row 1: Judul -->
-                                            <div class="doc-sheet-row title-row">
-                                                <input type="text" class="doc-inline-input title-input" name="title"
-                                                    id="submateriInputTitle" placeholder="Judul Submateri" required
-                                                    autocomplete="off">
+                                <!-- Document Editor Sheet -->
+                                <div class="document-editor">
+                                    <!-- Word-like Toolbar -->
+                                    <div class="doc-toolbar">
+                                        <!-- History -->
+                                        <button type="button" class="doc-toolbar-btn" onclick="formatDoc('undo')"
+                                            title="Undo (Ctrl+Z)">↶</button>
+                                        <button type="button" class="doc-toolbar-btn" onclick="formatDoc('redo')"
+                                            title="Redo (Ctrl+Y)">↷</button>
+                                        <div class="doc-toolbar-divider"></div>
+                                        <!-- Styling -->
+                                        <button type="button" class="doc-toolbar-btn" style="font-weight: bold;"
+                                            onclick="formatDoc('bold')" title="Tebal (Ctrl+B)">B</button>
+                                        <button type="button" class="doc-toolbar-btn" style="font-style: italic;"
+                                            onclick="formatDoc('italic')" title="Miring (Ctrl+I)">I</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            style="text-decoration: underline;" onclick="formatDoc('underline')"
+                                            title="Garis Bawah (Ctrl+U)">U</button>
+                                        <div class="doc-toolbar-divider"></div>
+                                        <!-- Blocks -->
+                                        <button type="button" class="doc-toolbar-btn"
+                                            style="font-weight: bold; font-size:11px;" onclick="addDocBlock('p')"
+                                            title="Paragraf (P)">P</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            style="font-weight: 700; font-size:11px;" onclick="addDocBlock('h2')"
+                                            title="Judul Utama (H2)">H2</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            style="font-weight: 600; font-size:11px;" onclick="addDocBlock('h3')"
+                                            title="Subjudul (H3)">H3</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onclick="addDocBlock('blockquote')" title="Kutipan">“ ”</button>
+                                        <div class="doc-toolbar-divider"></div>
+                                        <!-- Insert tools -->
+                                        <button type="button" class="doc-toolbar-btn" onclick="addDocBlock('pre')"
+                                            title="Sisipkan Kode Block">&lt;/&gt;</button>
+                                        <button type="button" class="doc-toolbar-btn" onclick="insertTableBlock()"
+                                            title="Sisipkan Tabel">田</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onclick="addDocBlock('ul', '<li>Butir list...</li>')"
+                                            title="Point List Bab">•
+                                            List</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onclick="addDocBlock('ol', '<li>Butir list...</li>')"
+                                            title="Point List Number">1. List</button>
+                                        <div class="doc-toolbar-divider"></div>
+                                        <!-- Media & Others -->
+                                        <button type="button" class="doc-toolbar-btn" onclick="addDocBlock('image')"
+                                            title="Sisipkan Gambar" style="font-size: 11px;">▣ Gambar</button>
+                                        <button type="button" class="doc-toolbar-btn" onclick="addDocBlock('video')"
+                                            title="Sisipkan Video" style="font-size: 11px;">▶ Video</button>
+                                        <button type="button" class="doc-toolbar-btn" onclick="addDocBlock('callout')"
+                                            title="Sisipkan Info Box" style="font-size: 11px;">ⓘ Info Box</button>
+                                        <div class="doc-toolbar-divider"></div>
+                                        <div class="doc-toolbar-divider"></div>
+                                        <!-- Clear -->
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onclick="formatDoc('removeFormat')" title="Hapus Format">Tx</button>
+                                        <!-- Focus Mode Toggle -->
+                                        <button type="button" class="doc-toolbar-btn" id="editorFocusToggleBtn"
+                                            onclick="toggleEditorFocusMode()"
+                                            title="Mode Fokus (Sembunyikan Sidebar & Tabel)"
+                                            style="margin-left: auto; font-weight: bold; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                                            ⛶ Fokus
+                                        </button>
+                                    </div>
+                                    <!-- Main Editor Container (Sheet and Sidebar) -->
+                                    <div class="doc-main-container">
+                                        <!-- Document Sheet Page -->
+                                        <div class="doc-sheet-container">
+                                            <div class="doc-sheet">
+                                                <!-- Row 1: Judul -->
+                                                <div class="doc-sheet-row title-row">
+                                                    <input type="text" class="doc-inline-input title-input" name="title"
+                                                        id="submateriInputTitle" placeholder="Judul Submateri" required
+                                                        autocomplete="off">
+                                                </div>
+                                                <!-- Dynamic Blocks Container -->
+                                                <div id="docBlocksContainer"></div>
                                             </div>
-                                            <!-- Dynamic Blocks Container -->
-                                            <div id="docBlocksContainer"></div>
                                         </div>
-                                    </div>
-                                    <!-- Right Sidebar (Struktur) -->
-                                    <div class="doc-sidebar">
-                                        <div class="doc-sidebar-title">Struktur</div>
-                                        <div id="docSidebarOutline"
-                                            style="display: flex; flex-direction: column; overflow-y: auto; max-height: 550px; padding-right: 4px; gap: 8px;">
-                                            <!-- Dynamic outline items will be rendered here -->
+                                        <!-- Right Sidebar (Struktur) -->
+                                        <div class="doc-sidebar">
+                                            <div class="doc-sidebar-title">Struktur</div>
+                                            <div id="docSidebarOutline"
+                                                style="display: flex; flex-direction: column; overflow-y: auto; max-height: 550px; padding-right: 4px; gap: 8px;">
+                                                <!-- Dynamic outline items will be rendered here -->
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <!-- Hidden input to store the raw HTML description -->
-                            <input type="hidden" name="description" id="submateriInputDesc">
-                            <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 8px;">
-                                <button type="button" class="btn-modal btn-modal-cancel" id="submateriCancelBtn"
-                                    onclick="resetSubmateriForm()"
-                                    style="display: none; width: auto; min-width: 100px; padding: 10px 20px;">Batal</button>
-                                <button type="submit" class="btn-modal btn-modal-submit"
-                                    style="width: auto; min-width: 120px; padding: 10px 20px;">Simpan</button>
-                            </div>
-                        </form>
+                                <!-- Hidden input to store the raw HTML description -->
+                                <input type="hidden" name="description" id="submateriInputDesc">
+                                <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 8px;">
+                                    <button type="button" class="btn-modal btn-modal-cancel" id="submateriCancelBtn"
+                                        onclick="resetSubmateriForm()"
+                                        style="display: none; width: auto; min-width: 100px; padding: 10px 20px;">Batal</button>
+                                    <button type="submit" class="btn-modal btn-modal-submit"
+                                        style="width: auto; min-width: 120px; padding: 10px 20px;">Simpan</button>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- List Table (Right Column) -->
+                        <div class="table-responsive"
+                            style="border: 1px solid var(--border-color); border-radius: 20px; background: rgba(255, 255, 255, 0.01); padding: 16px 20px;">
+                            <table class="premium-table">
+                                <thead>
+                                    <tr>
+                                        <th>Icon</th>
+                                        <th>Judul Submateri</th>
+                                        <th>Modul Utama (Course)</th>
+                                        <th>Order Ke-</th>
+                                        <th>Deskripsi</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($submateris as $sub)
+                                        <tr>
+                                            <td>
+                                                <div
+                                                    style="font-size: 20px; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 10px;">
+                                                    {{ $sub->icon ?? '📂' }}
+                                                </div>
+                                            </td>
+                                            <td style="font-weight: 700; color: #ffffff;">{{ $sub->title }}</td>
+                                            <td>
+                                                <span
+                                                    class="badge-pill-accent">{{ $sub->course ? $sub->course->title : 'N/A' }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge-pill-muted">Urutan {{ $sub->order }}</span>
+                                            </td>
+                                            <td
+                                                style="color: var(--text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                {{ strip_tags($sub->description) ? Str::limit(strip_tags($sub->description), 80) : '-' }}
+                                            </td>
+                                            <td>
+                                                @if(($sub->status ?? 'published') === 'published')
+                                                    <span class="badge-pill-accent"
+                                                        style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);">Publish</span>
+                                                @elseif($sub->status === 'draft')
+                                                    <span class="badge-pill-accent"
+                                                        style="background: rgba(117, 104, 133, 0.1); color: #a1a1aa; border: 1px solid rgba(117, 104, 133, 0.2);">Draft</span>
+                                                @elseif($sub->status === 'coming_soon')
+                                                    <span class="badge-pill-accent"
+                                                        style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">Coming
+                                                        Soon</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="actions-cell">
+                                                    <button class="btn-action-outline btn-action-outline-edit"
+                                                        data-id="{{ $sub->id }}" data-course-id="{{ $sub->course_id }}"
+                                                        data-title="{{ $sub->title }}"
+                                                        data-description="{{ $sub->description }}"
+                                                        data-icon="{{ $sub->icon }}" data-order="{{ $sub->order }}"
+                                                        data-status="{{ $sub->status ?? 'published' }}" onclick="setSubmateriEditMode(
+                                                                        this.getAttribute('data-id'),
+                                                                        this.getAttribute('data-course-id'),
+                                                                        this.getAttribute('data-title'),
+                                                                        this.getAttribute('data-description'),
+                                                                        this.getAttribute('data-icon'),
+                                                                        this.getAttribute('data-order'),
+                                                                        this.getAttribute('data-status')
+                                                                    )">Edit</button>
+                                                    <form action="{{ route('admin.submateri.delete', $sub->id) }}"
+                                                        method="POST"
+                                                        data-confirm-message="Hapus submateri {{ addslashes($sub->title) }}?"
+                                                        data-confirm-btn="Hapus Submateri">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                            class="btn-action-outline btn-action-outline-delete">Hapus</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7"
+                                                style="text-align: center; color: var(--text-muted); padding: 50px 0;">
+                                                Belum ada data Submateri terdaftar.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div> <!-- End of sub-panel-main management-layout -->
+                </div> <!-- End of sub-panel-main -->
+
+                <!-- Sub-tab Panel 2: Kelola Bab -->
+                <div class="sub-tab-panel {{ $activeSubtab === 'bab' ? 'active' : '' }}" id="sub-panel-bab"
+                    style="display: {{ $activeSubtab === 'bab' ? 'block' : 'none' }}">
+                    <div class="management-layout">
+                        <!-- Form Input Data (Left Column) -->
+                        <div class="form-card-premium">
+                            <h3 class="form-card-title" id="chapterFormTitle">Tambah Bab</h3>
+                            <p class="form-card-subtitle" id="chapterFormSubtitle">Masukkan data untuk menambahkan bab
+                                baru</p>
+                            <form action="{{ route('admin.chapters.store') }}" method="POST" id="chapterForm">
+                                @csrf
+                                <input type="hidden" name="_method" value="POST" id="chapterMethodInput">
+                                <div class="form-grid-inputs" style="margin-bottom: 20px;">
+                                    <div class="form-group">
+                                        <label class="form-label" for="chapterInputSubmateriId">Submateri</label>
+                                        <select class="form-select" name="submateri_id" id="chapterInputSubmateriId"
+                                            required>
+                                            <option value="">-- Pilih Submateri --</option>
+                                            @foreach($submateris as $sub)
+                                                <option value="{{ $sub->id }}">[{{ $sub->course->title ?? 'N/A' }}]
+                                                    {{ $sub->title }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="chapterInputTitle">Judul Bab</label>
+                                        <input class="form-input" type="text" name="title" id="chapterInputTitle"
+                                            placeholder="e.g. Pengenalan HTML" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="chapterInputOrder">Urutan (Order)</label>
+                                        <input class="form-input" type="number" name="order" id="chapterInputOrder"
+                                            value="1" min="0" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="chapterInputStatus">Status</label>
+                                        <select class="form-select" name="status" id="chapterInputStatus" required>
+                                            <option value="published">Publish</option>
+                                            <option value="draft">Draft</option>
+                                            <option value="coming_soon">Coming Soon</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                                    <button type="button" class="btn-modal btn-modal-cancel" id="chapterCancelBtn"
+                                        onclick="resetChapterForm()"
+                                        style="display: none; width: auto; min-width: 100px; padding: 10px 20px;">Batal</button>
+                                    <button type="submit" class="btn-modal btn-modal-submit"
+                                        style="width: auto; min-width: 120px; padding: 10px 20px;">Simpan</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- List Table (Right Column) -->
+                        <div class="table-responsive"
+                            style="border: 1px solid var(--border-color); border-radius: 20px; background: rgba(255, 255, 255, 0.01); padding: 16px 20px;">
+                            <table class="premium-table">
+                                <thead>
+                                    <tr>
+                                        <th>Submateri</th>
+                                        <th>Judul Bab</th>
+                                        <th>Urutan</th>
+                                        <th>Jumlah Halaman</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($chapters as $ch)
+                                        <tr>
+                                            <td>
+                                                <span
+                                                    class="badge-pill-accent">[{{ $ch->submateri->course->title ?? 'N/A' }}]
+                                                    {{ $ch->submateri->title ?? 'N/A' }}</span>
+                                            </td>
+                                            <td style="font-weight: 700; color: #ffffff;">{{ $ch->title }}</td>
+                                            <td>
+                                                <span class="badge-pill-muted">Urutan {{ $ch->order }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge-pill-muted">{{ $ch->lessons->count() }} Halaman</span>
+                                            </td>
+                                            <td>
+                                                @if(($ch->status ?? 'published') === 'published')
+                                                    <span class="badge-pill-accent"
+                                                        style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);">Publish</span>
+                                                @elseif($ch->status === 'draft')
+                                                    <span class="badge-pill-accent"
+                                                        style="background: rgba(117, 104, 133, 0.1); color: #a1a1aa; border: 1px solid rgba(117, 104, 133, 0.2);">Draft</span>
+                                                @elseif($ch->status === 'coming_soon')
+                                                    <span class="badge-pill-accent"
+                                                        style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">Coming
+                                                        Soon</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="actions-cell">
+                                                    <button class="btn-action-outline btn-action-outline-edit"
+                                                        data-id="{{ $ch->id }}" data-submateri-id="{{ $ch->submateri_id }}"
+                                                        data-title="{{ $ch->title }}" data-order="{{ $ch->order }}"
+                                                        data-status="{{ $ch->status ?? 'published' }}" onclick="setChapterEditMode(
+                                                                            this.getAttribute('data-id'),
+                                                                            this.getAttribute('data-submateri-id'),
+                                                                            this.getAttribute('data-title'),
+                                                                            this.getAttribute('data-order'),
+                                                                            this.getAttribute('data-status')
+                                                                        )">Edit</button>
+                                                    <button class="btn-action-outline"
+                                                        style="color: #60a5fa; border-color: rgba(96, 165, 250, 0.2);"
+                                                        onclick="quickAddLesson({{ $ch->id }})">+ Halaman</button>
+                                                    <form action="{{ route('admin.chapters.delete', $ch->id) }}"
+                                                        method="POST"
+                                                        data-confirm-message="Hapus bab {{ addslashes($ch->title) }}? Semua halaman di dalamnya akan terhapus."
+                                                        data-confirm-btn="Hapus Bab">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                            class="btn-action-outline btn-action-outline-delete">Hapus</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6"
+                                                style="text-align: center; color: var(--text-muted); padding: 50px 0;">Belum
+                                                ada data Bab terdaftar.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <!-- List Table (Right Column) -->
-                    <div class="table-responsive"
-                        style="border: 1px solid var(--border-color); border-radius: 20px; background: rgba(255, 255, 255, 0.01); padding: 16px 20px;">
-                        <table class="premium-table">
-                            <thead>
-                                <tr>
-                                    <th>Icon</th>
-                                    <th>Judul Submateri</th>
-                                    <th>Modul Utama (Course)</th>
-                                    <th>Order Ke-</th>
-                                    <th>Deskripsi</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($submateris as $sub)
-                                    <tr>
-                                        <td>
-                                            <div
-                                                style="font-size: 20px; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 10px;">
-                                                {{ $sub->icon ?? '📂' }}
+                </div>
+
+                <!-- Sub-tab Panel 3: Kelola Halaman -->
+                <div class="sub-tab-panel {{ $activeSubtab === 'halaman' ? 'active' : '' }}" id="sub-panel-halaman"
+                    style="display: {{ $activeSubtab === 'halaman' ? 'block' : 'none' }}">
+                    <div class="management-layout">
+                        <!-- Form Input Data (Left Column) -->
+                        <div class="form-card-premium">
+                            <h3 class="form-card-title" id="lessonFormTitle">Tambah Halaman</h3>
+                            <p class="form-card-subtitle" id="lessonFormSubtitle">Masukkan data untuk menambahkan
+                                halaman materi baru</p>
+                            <form action="{{ route('admin.lessons.store') }}" method="POST" id="lessonForm">
+                                @csrf
+                                <input type="hidden" name="_method" value="POST" id="lessonMethodInput">
+                                <div class="form-grid-inputs" style="margin-bottom: 20px;">
+                                    <div class="form-group">
+                                        <label class="form-label" for="lessonInputChapterId">Bab (Chapter)</label>
+                                        <select class="form-select" name="chapter_id" id="lessonInputChapterId"
+                                            required>
+                                            <option value="">-- Pilih Bab --</option>
+                                            @foreach($chapters as $ch)
+                                                <option value="{{ $ch->id }}">[{{ $ch->submateri->title ?? 'N/A' }}] Bab
+                                                    {{ $ch->order }}: {{ $ch->title }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="lessonInputOrder">Urutan (Order)</label>
+                                        <input class="form-input" type="number" name="order" id="lessonInputOrder"
+                                            value="1" min="0" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="lessonInputStatus">Status</label>
+                                        <select class="form-select" name="status" id="lessonInputStatus" required>
+                                            <option value="published">Publish</option>
+                                            <option value="draft">Draft</option>
+                                            <option value="coming_soon">Coming Soon</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Document Editor Sheet for Lesson -->
+                                <div class="document-editor">
+                                    <!-- Word-like Toolbar -->
+                                    <div class="doc-toolbar">
+                                        <button type="button" class="doc-toolbar-btn" onclick="formatDoc('undo')"
+                                            title="Undo (Ctrl+Z)">↶</button>
+                                        <button type="button" class="doc-toolbar-btn" onclick="formatDoc('redo')"
+                                            title="Redo (Ctrl+Y)">↷</button>
+                                        <div class="doc-toolbar-divider"></div>
+                                        <button type="button" class="doc-toolbar-btn" style="font-weight: bold;"
+                                            onclick="formatDoc('bold')" title="Tebal (Ctrl+B)">B</button>
+                                        <button type="button" class="doc-toolbar-btn" style="font-style: italic;"
+                                            onclick="formatDoc('italic')" title="Miring (Ctrl+I)">I</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            style="text-decoration: underline;" onclick="formatDoc('underline')"
+                                            title="Garis Bawah (Ctrl+U)">U</button>
+                                        <div class="doc-toolbar-divider"></div>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            style="font-weight: bold; font-size:11px;" onclick="addLessonDocBlock('p')"
+                                            title="Paragraf (P)">P</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            style="font-weight: 700; font-size:11px;" onclick="addLessonDocBlock('h2')"
+                                            title="Judul Utama (H2)">H2</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            style="font-weight: 600; font-size:11px;" onclick="addLessonDocBlock('h3')"
+                                            title="Subjudul (H3)">H3</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onclick="addLessonDocBlock('blockquote')" title="Kutipan">“ ”</button>
+                                        <div class="doc-toolbar-divider"></div>
+                                        <button type="button" class="doc-toolbar-btn" onclick="addLessonDocBlock('pre')"
+                                            title="Sisipkan Kode Block">&lt;/&gt;</button>
+                                        <button type="button" class="doc-toolbar-btn" onclick="insertLessonTableBlock()"
+                                            title="Sisipkan Tabel">田</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onclick="addLessonDocBlock('ul', '<li>Butir list...</li>')"
+                                            title="Point List Bab">• List</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onclick="addLessonDocBlock('ol', '<li>Butir list...</li>')"
+                                            title="Point List Number">1. List</button>
+                                        <div class="doc-toolbar-divider"></div>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onclick="addLessonDocBlock('image')" title="Sisipkan Gambar"
+                                            style="font-size: 11px;">▣ Gambar</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onclick="addLessonDocBlock('video')" title="Sisipkan Video"
+                                            style="font-size: 11px;">▶ Video</button>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onclick="addLessonDocBlock('callout')" title="Sisipkan Info Box"
+                                            style="font-size: 11px;">ⓘ Info Box</button>
+                                        <div class="doc-toolbar-divider"></div>
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onclick="formatDoc('removeFormat')" title="Hapus Format">Tx</button>
+                                        <button type="button" class="doc-toolbar-btn" id="lessonEditorFocusToggleBtn"
+                                            onclick="toggleLessonEditorFocusMode()"
+                                            title="Mode Fokus (Sembunyikan Sidebar & Tabel)"
+                                            style="margin-left: auto; font-weight: bold; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                                            ⛶ Fokus
+                                        </button>
+                                    </div>
+                                    <!-- Main Editor Container (Sheet and Sidebar) -->
+                                    <div class="doc-main-container">
+                                        <div class="doc-sheet-container">
+                                            <div class="doc-sheet">
+                                                <div class="doc-sheet-row title-row">
+                                                    <input type="text" class="doc-inline-input title-input" name="title"
+                                                        id="lessonInputTitle" placeholder="Judul Halaman" required
+                                                        autocomplete="off">
+                                                </div>
+                                                <div id="lessonDocBlocksContainer"></div>
                                             </div>
-                                        </td>
-                                        <td style="font-weight: 700; color: #ffffff;">{{ $sub->title }}</td>
-                                        <td>
-                                            <span
-                                                class="badge-pill-accent">{{ $sub->course ? $sub->course->title : 'N/A' }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge-pill-muted">Urutan {{ $sub->order }}</span>
-                                        </td>
-                                        <td
-                                            style="color: var(--text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                            {{ strip_tags($sub->description) ? Str::limit(strip_tags($sub->description), 80) : '-' }}
-                                        </td>
-                                        <td>
-                                            <div class="actions-cell">
-                                                <button class="btn-action-outline btn-action-outline-edit"
-                                                    data-id="{{ $sub->id }}" data-course-id="{{ $sub->course_id }}"
-                                                    data-title="{{ $sub->title }}"
-                                                    data-description="{{ $sub->description }}" data-icon="{{ $sub->icon }}"
-                                                    data-order="{{ $sub->order }}"
-                                                    onclick="setSubmateriEditMode(
-                                                                                                                                                                                                                this.getAttribute('data-id'),
-                                                                                                                                                                                                                this.getAttribute('data-course-id'),
-                                                                                                                                                                                                                this.getAttribute('data-title'),
-                                                                                                                                                                                                                this.getAttribute('data-description'),
-                                                                                                                                                                                                                this.getAttribute('data-icon'),
-                                                                                                                                                                                                                this.getAttribute('data-order')
-                                                                                                                                                                                                            )">Edit</button>
-                                                <form action="{{ route('admin.submateri.delete', $sub->id) }}" method="POST"
-                                                    onsubmit="return confirm('Hapus submateri {{ addslashes($sub->title) }}?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"
-                                                        class="btn-action-outline btn-action-outline-delete">Hapus</button>
-                                                </form>
+                                        </div>
+                                        <!-- Right Sidebar (Struktur) -->
+                                        <div class="doc-sidebar">
+                                            <div class="doc-sidebar-title">Struktur</div>
+                                            <div id="lessonDocSidebarOutline"
+                                                style="display: flex; flex-direction: column; overflow-y: auto; max-height: 550px; padding-right: 4px; gap: 8px;">
+                                                <!-- Dynamic outline items will be rendered here -->
                                             </div>
-                                        </td>
-                                    </tr>
-                                @empty
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="content" id="lessonInputContent">
+                                <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 8px;">
+                                    <button type="button" class="btn-modal btn-modal-cancel" id="lessonCancelBtn"
+                                        onclick="resetLessonForm()"
+                                        style="display: none; width: auto; min-width: 100px; padding: 10px 20px;">Batal</button>
+                                    <button type="submit" class="btn-modal btn-modal-submit"
+                                        style="width: auto; min-width: 120px; padding: 10px 20px;">Simpan</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- List Table (Right Column) -->
+                        <div class="table-responsive"
+                            style="border: 1px solid var(--border-color); border-radius: 20px; background: rgba(255, 255, 255, 0.01); padding: 16px 20px;">
+                            <table class="premium-table">
+                                <thead>
                                     <tr>
-                                        <td colspan="6"
-                                            style="text-align: center; color: var(--text-muted); padding: 50px 0;">
-                                            Belum ada data Submateri terdaftar.</td>
+                                        <th>Bab (Chapter)</th>
+                                        <th>Judul Halaman</th>
+                                        <th>Urutan</th>
+                                        <th>Konten Singkat</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
                                     </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @forelse($lessons as $lsn)
+                                        <tr>
+                                            <td>
+                                                <span
+                                                    class="badge-pill-accent">[{{ $lsn->chapter->submateri->title ?? 'N/A' }}]
+                                                    Bab {{ $lsn->chapter->order ?? 'N/A' }}:
+                                                    {{ $lsn->chapter->title ?? 'N/A' }}</span>
+                                            </td>
+                                            <td style="font-weight: 700; color: #ffffff;">{{ $lsn->title }}</td>
+                                            <td>
+                                                <span class="badge-pill-muted">Urutan {{ $lsn->order }}</span>
+                                            </td>
+                                            <td
+                                                style="color: var(--text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                {{ strip_tags($lsn->content) ? Str::limit(strip_tags($lsn->content), 80) : '-' }}
+                                            </td>
+                                            <td>
+                                                @if(($lsn->status ?? 'published') === 'published')
+                                                    <span class="badge-pill-accent"
+                                                        style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);">Publish</span>
+                                                @elseif($lsn->status === 'draft')
+                                                    <span class="badge-pill-accent"
+                                                        style="background: rgba(117, 104, 133, 0.1); color: #a1a1aa; border: 1px solid rgba(117, 104, 133, 0.2);">Draft</span>
+                                                @elseif($lsn->status === 'coming_soon')
+                                                    <span class="badge-pill-accent"
+                                                        style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">Coming
+                                                        Soon</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="actions-cell">
+                                                    <button class="btn-action-outline btn-action-outline-edit"
+                                                        data-id="{{ $lsn->id }}" data-chapter-id="{{ $lsn->chapter_id }}"
+                                                        data-title="{{ $lsn->title }}" data-content="{{ $lsn->content }}"
+                                                        data-order="{{ $lsn->order }}"
+                                                        data-status="{{ $lsn->status ?? 'published' }}" onclick="setLessonEditMode(
+                                                                            this.getAttribute('data-id'),
+                                                                            this.getAttribute('data-chapter-id'),
+                                                                            this.getAttribute('data-title'),
+                                                                            this.getAttribute('data-content'),
+                                                                            this.getAttribute('data-order'),
+                                                                            this.getAttribute('data-status')
+                                                                        )">Edit</button>
+                                                    <form action="{{ route('admin.lessons.delete', $lsn->id) }}"
+                                                        method="POST"
+                                                        data-confirm-message="Hapus halaman {{ addslashes($lsn->title) }}?"
+                                                        data-confirm-btn="Hapus Halaman">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                            class="btn-action-outline btn-action-outline-delete">Hapus</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6"
+                                                style="text-align: center; color: var(--text-muted); padding: 50px 0;">Belum
+                                                ada data Halaman terdaftar.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -924,65 +1338,29 @@
                 </div>
                 <div class="management-layout">
                     <!-- Form Input Data (Top Column) -->
-                    <div class="form-card-premium">
+                    <div class="form-card-premium" style="max-width: 100%; width: 100%;">
                         <h3 class="form-card-title" id="quizFormTitle">Tambah Soal Baru</h3>
                         <p class="form-card-subtitle" id="quizFormSubtitle">Masukkan data untuk menambahkan kuis pilihan
-                            ganda baru</p>
-                        <form action="{{ route('admin.quizzes.store') }}" method="POST" id="quizForm">
+                            ganda, kode, atau puzzle baru</p>
+                        <form action="{{ route('admin.quizzes.store') }}" method="POST" id="quizForm"
+                            enctype="multipart/form-data">
                             @csrf
                             <input type="hidden" name="_method" value="POST" id="quizMethodInput">
-                            <div class="form-grid-inputs">
-                                <div class="form-group">
-                                    <label class="form-label" for="qzLessonId">Materi Sesi (Lesson)</label>
-                                    <select class="form-select" name="lesson_id" id="qzLessonId" required>
-                                        <option value="">-- Pilih Materi Sesi --</option>
-                                        @foreach($lessons as $l)
-                                            <option value="{{ $l->id }}">{{ $l->title }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="qzCorrect">Kunci Jawaban Benar</label>
-                                    <select class="form-select" name="correct_answer" id="qzCorrect" required>
-                                        <option value="a">Pilihan A</option>
-                                        <option value="b">Pilihan B</option>
-                                        <option value="c">Pilihan C</option>
-                                        <option value="d">Pilihan D</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="grid-column: 1 / -1;">
-                                    <label class="form-label" for="qzQuestion">Pertanyaan Kuis</label>
-                                    <textarea class="form-input" name="question" id="qzQuestion"
-                                        placeholder="Masukkan teks pertanyaan..." required
-                                        style="height: 80px; min-height: 80px; resize: vertical;"></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="qzOptA">Pilihan A</label>
-                                    <input class="form-input" type="text" name="option_a" id="qzOptA"
-                                        placeholder="Jawaban A" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="qzOptB">Pilihan B</label>
-                                    <input class="form-input" type="text" name="option_b" id="qzOptB"
-                                        placeholder="Jawaban B" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="qzOptC">Pilihan C</label>
-                                    <input class="form-input" type="text" name="option_c" id="qzOptC"
-                                        placeholder="Jawaban C" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="qzOptD">Pilihan D</label>
-                                    <input class="form-input" type="text" name="option_d" id="qzOptD"
-                                        placeholder="Jawaban D" required>
-                                </div>
-                                <div class="form-group" style="grid-column: 1 / -1;">
-                                    <label class="form-label" for="qzExpl">Penjelasan / Pembahasan (Opsional)</label>
-                                    <textarea class="form-input" name="explanation" id="qzExpl"
-                                        placeholder="Masukkan pembahasan jawaban..."
-                                        style="height: 80px; min-height: 80px; resize: vertical;"></textarea>
-                                </div>
+
+                            <!-- Container for question blocks -->
+                            <div id="quizQuestionsContainer">
+                                <!-- Will be rendered dynamically by JS -->
                             </div>
+
+                            <!-- Batch controls -->
+                            <div id="batchButtonsRow"
+                                style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+                                <button type="button" class="btn-action-outline" id="addQuestionBtn"
+                                    style="color: var(--accent-color, #8b5cf6); border-color: rgba(139, 92, 246, 0.3); font-weight: 600; padding: 8px 16px; border-radius: 12px; display: flex; align-items: center; gap: 6px; background: transparent; cursor: pointer;">
+                                    <i class='bx bx-plus-circle' style="font-size: 16px;"></i> Tambah Soal ke Batch
+                                </button>
+                            </div>
+
                             <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 8px;">
                                 <button type="button" class="btn-modal btn-modal-cancel" id="quizCancelBtn"
                                     onclick="resetQuizForm()"
@@ -999,6 +1377,7 @@
                             <thead>
                                 <tr>
                                     <th>Materi Sesi (Lesson)</th>
+                                    <th>Tipe</th>
                                     <th>Pertanyaan Soal</th>
                                     <th>Pilihan Jawaban (A/B/C/D)</th>
                                     <th>Kunci Jawaban</th>
@@ -1012,26 +1391,88 @@
                                             style="font-weight: 700; color: #ffffff; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                             {{ $qz->lesson ? $qz->lesson->title : 'N/A' }}
                                         </td>
+                                        <td>
+                                            <span class="badge-pill-accent"
+                                                style="text-transform: capitalize; background: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.2);">
+                                                {{ $qz->type ?? 'text' }}
+                                            </span>
+                                            @if($qz->image_url)
+                                                <span class="badge-pill-accent"
+                                                    style="font-size: 10px; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); margin-top: 4px; display: inline-block;">🖼️
+                                                    Gambar</span>
+                                            @endif
+                                            @if($qz->video_url)
+                                                <span class="badge-pill-accent"
+                                                    style="font-size: 10px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); margin-top: 4px; display: inline-block;">🎥
+                                                    Video</span>
+                                            @endif
+                                            @if($qz->code_block)
+                                                <span class="badge-pill-accent"
+                                                    style="font-size: 10px; background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 4px; display: inline-block;">💻
+                                                    Code</span>
+                                            @endif
+                                        </td>
                                         <td
                                             style="color: #ffffff; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                             {{ $qz->question }}
                                         </td>
                                         <td>
-                                            @if(is_array($qz->options) && count($qz->options) >= 4)
-                                                <div
-                                                    style="font-size: 11px; display: flex; flex-direction: column; gap: 2px; color: var(--text-muted);">
-                                                    <span>A: {{ $qz->options[0] }}</span>
-                                                    <span>B: {{ $qz->options[1] }}</span>
-                                                    <span>C: {{ $qz->options[2] }}</span>
-                                                    <span>D: {{ $qz->options[3] }}</span>
-                                                </div>
+                                            @if(($qz->type ?? 'text') === 'puzzle')
+                                                @if(is_array($qz->options))
+                                                    <div
+                                                        style="font-size: 11px; display: flex; flex-direction: column; gap: 2px; color: var(--text-muted);">
+                                                        @foreach($qz->options as $oIdx => $lineOpt)
+                                                            <span style="font-family: monospace;">Baris {{ $oIdx + 1 }}:
+                                                                {{ Str::limit($lineOpt, 30) }}</span>
+                                                        @endforeach
+                                                    </div>
+                                                @else
+                                                    <span style="color: var(--danger-red);">Data puzzle tidak valid</span>
+                                                @endif
                                             @else
-                                                <span style="color: var(--danger-red);">Data pilihan tidak valid</span>
+                                                @if(is_array($qz->options) && count($qz->options) >= 4)
+                                                    <div
+                                                        style="font-size: 11px; display: flex; flex-direction: column; gap: 2px; color: var(--text-muted);">
+                                                        <span>A: {{ $qz->options[0] }}</span>
+                                                        <span>B: {{ $qz->options[1] }}</span>
+                                                        <span>C: {{ $qz->options[2] }}</span>
+                                                        <span>D: {{ $qz->options[3] }}</span>
+                                                    </div>
+                                                @else
+                                                    <span style="color: var(--danger-red);">Data pilihan tidak valid</span>
+                                                @endif
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="badge-pill-accent"
-                                                style="text-transform: uppercase;">{{ $qz->correct_answer }}</span>
+                                            @if(($qz->type ?? 'text') === 'puzzle')
+                                                @php
+                                                    $correctLines = json_decode($qz->correct_answer, true) ?: [];
+                                                @endphp
+                                                <div
+                                                    style="font-size: 10px; display: flex; flex-direction: column; gap: 2px; color: #34d399;">
+                                                    @foreach($correctLines as $lineCorr)
+                                                        <code style="white-space: nowrap;">{{ Str::limit($lineCorr, 20) }}</code>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                @php
+                                                    $letter = 'N/A';
+                                                    if (is_array($qz->options)) {
+                                                        $optKeys = ['a', 'b', 'c', 'd'];
+                                                        foreach ($qz->options as $oIdx => $oVal) {
+                                                            if ($oVal === $qz->correct_answer) {
+                                                                $letter = strtoupper($optKeys[$oIdx]);
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                    if ($letter === 'N/A') {
+                                                        $letter = strtoupper($qz->correct_answer);
+                                                    }
+                                                @endphp
+                                                <span class="badge-pill-accent" style="text-transform: uppercase;">Pilihan
+                                                    {{ $letter }}</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="actions-cell">
@@ -1043,23 +1484,32 @@
                                                 @endphp
                                                 <button class="btn-action-outline btn-action-outline-edit"
                                                     data-id="{{ $qz->id }}" data-lesson-id="{{ $qz->lesson_id }}"
+                                                    data-type="{{ $qz->type ?? 'text' }}"
                                                     data-question="{{ $qz->question }}"
+                                                    data-image-url="{{ $qz->image_url ?? '' }}"
+                                                    data-video-url="{{ $qz->video_url ?? '' }}"
+                                                    data-code-block="{{ $qz->code_block ?? '' }}"
                                                     data-correct-answer="{{ $qz->correct_answer }}"
                                                     data-explanation="{{ $qz->explanation }}" data-opta="{{ $optA }}"
                                                     data-optb="{{ $optB }}" data-optc="{{ $optC }}" data-optd="{{ $optD }}"
                                                     onclick="setQuizEditMode(
-                                                                                                                                                                                                                this.getAttribute('data-id'),
-                                                                                                                                                                                                                this.getAttribute('data-lesson-id'),
-                                                                                                                                                                                                                this.getAttribute('data-question'),
-                                                                                                                                                                                                                this.getAttribute('data-correct-answer'),
-                                                                                                                                                                                                                this.getAttribute('data-explanation'),
-                                                                                                                                                                                                                this.getAttribute('data-opta'),
-                                                                                                                                                                                                                this.getAttribute('data-optb'),
-                                                                                                                                                                                                                this.getAttribute('data-optc'),
-                                                                                                                                                                                                                this.getAttribute('data-optd')
-                                                                                                                                                                                                            )">Edit</button>
+                                                                                                                                                                                                                                                            this.getAttribute('data-id'),
+                                                                                                                                                                                                                                                            this.getAttribute('data-lesson-id'),
+                                                                                                                                                                                                                                                            this.getAttribute('data-type'),
+                                                                                                                                                                                                                                                            this.getAttribute('data-question'),
+                                                                                                                                                                                                                                                            this.getAttribute('data-image-url'),
+                                                                                                                                                                                                                                                            this.getAttribute('data-video-url'),
+                                                                                                                                                                                                                                                            this.getAttribute('data-code-block'),
+                                                                                                                                                                                                                                                            this.getAttribute('data-correct-answer'),
+                                                                                                                                                                                                                                                            this.getAttribute('data-explanation'),
+                                                                                                                                                                                                                                                            this.getAttribute('data-opta'),
+                                                                                                                                                                                                                                                            this.getAttribute('data-optb'),
+                                                                                                                                                                                                                                                            this.getAttribute('data-optc'),
+                                                                                                                                                                                                                                                            this.getAttribute('data-optd')
+                                                                                                                                                                                                                                                        )">Edit</button>
                                                 <form action="{{ route('admin.quizzes.delete', $qz->id) }}" method="POST"
-                                                    onsubmit="return confirm('Hapus soal kuis ini?');">
+                                                    data-confirm-message="Hapus soal kuis ini?"
+                                                    data-confirm-btn="Hapus Soal">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
@@ -1200,7 +1650,7 @@
                                                 <span class="db-col-name">
                                                     @if($col['key'] === 'primary')<span
                                                     class="db-key-badge pk">PK</span>@elseif($col['key'] === 'foreign')<span
-                                                    class="db-key-badge fk">FK</span>@elseif($col['key'] === 'unique')<span
+                                                        class="db-key-badge fk">FK</span>@elseif($col['key'] === 'unique')<span
                                                         class="db-key-badge uq">UQ</span>@endif
                                                     {{ $col['name'] }}
                                                 </span>
@@ -1262,7 +1712,8 @@
                                                 onclick="openEditExp('{{ $u->id }}', '{{ addslashes($u->name) }}', '{{ $u->exp }}')">Ubah
                                                 EXP</button>
                                             <form action="{{ route('admin.users.delete', $u->id) }}" method="POST"
-                                                onsubmit="return confirm('Hapus pengguna {{ addslashes($u->name) }}?');">
+                                                data-confirm-message="Hapus pengguna {{ addslashes($u->name) }}?"
+                                                data-confirm-btn="Hapus Pengguna">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit"
@@ -2134,8 +2585,13 @@
         function removeBlock(button) {
             const block = button.closest('.doc-block');
             if (block) {
+                const container = block.closest('#lessonDocBlocksContainer');
                 block.remove();
-                updateDocSidebarOutline();
+                if (container) {
+                    updateLessonDocSidebarOutline();
+                } else {
+                    updateDocSidebarOutline();
+                }
             }
         }
 
@@ -2157,13 +2613,14 @@
             addDocBlock('table', tableHtml);
         }
 
-        function setSubmateriEditMode(id, courseId, title, description, icon, order) {
+        function setSubmateriEditMode(id, courseId, title, description, icon, order, status) {
             document.getElementById('submateriForm').action = '/admin/submateri/' + id;
             document.getElementById('submateriMethodInput').value = 'PUT';
             document.getElementById('submateriInputCourseId').value = courseId;
             document.getElementById('submateriInputTitle').value = title;
             document.getElementById('submateriInputIcon').value = icon;
             document.getElementById('submateriInputOrder').value = order;
+            document.getElementById('submateriInputStatus').value = status || 'published';
             document.getElementById('submateriInputDesc').value = description;
             const container = document.getElementById('docBlocksContainer');
             if (container) {
@@ -2259,6 +2716,608 @@
             // Reset sidebar outline
 
             updateDocSidebarOutline();
+        }
+
+        function toggleEditorFocusMode() {
+            document.body.classList.toggle('editor-focus-mode');
+            const btn = document.getElementById('editorFocusToggleBtn');
+            if (btn) {
+                if (document.body.classList.contains('editor-focus-mode')) {
+                    btn.innerHTML = '⛶ Normal';
+                    btn.title = 'Kembali ke Tampilan Normal';
+                    btn.classList.add('active');
+                } else {
+                    btn.innerHTML = '⛶ Fokus';
+                    btn.title = 'Mode Fokus (Sembunyikan Sidebar & Tabel)';
+                    btn.classList.remove('active');
+                }
+            }
+        }
+
+        // Sub-tabs switching navigation
+        function switchSubmateriTab(btn, tabId) {
+            document.querySelectorAll('#tab-submateri .sub-tab-panel').forEach(panel => {
+                panel.style.display = 'none';
+                panel.classList.remove('active');
+            });
+            document.querySelectorAll('#tab-submateri .sub-tab-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            const targetPanel = document.getElementById('sub-panel-' + (tabId === 'submateri-main' ? 'main' : tabId));
+            if (targetPanel) {
+                targetPanel.style.display = 'block';
+                targetPanel.classList.add('active');
+            }
+            if (btn) {
+                btn.classList.add('active');
+            } else {
+                // Find matching button if triggered programmatically
+                const matchingBtn = document.querySelector(`.sub-tab-btn[onclick*="${tabId}"]`);
+                if (matchingBtn) matchingBtn.classList.add('active');
+            }
+            const url = new URL(window.location);
+            url.searchParams.set('tab', 'submateri');
+            url.searchParams.set('subtab', tabId);
+            window.history.pushState({}, '', url);
+        }
+
+        // Chapter CRUD Edit & Reset Functions
+        function setChapterEditMode(id, submateriId, title, order, status) {
+            document.getElementById('chapterForm').action = '/admin/chapters/' + id;
+            document.getElementById('chapterMethodInput').value = 'PUT';
+            document.getElementById('chapterInputSubmateriId').value = submateriId;
+            document.getElementById('chapterInputTitle').value = title;
+            document.getElementById('chapterInputOrder').value = order;
+            document.getElementById('chapterInputStatus').value = status || 'published';
+            document.getElementById('chapterFormTitle').innerText = 'Ubah Bab';
+            document.getElementById('chapterFormSubtitle').innerText = 'Perbarui data bab pembelajaran ini';
+            document.getElementById('chapterCancelBtn').style.display = 'block';
+            document.getElementById('chapterFormTitle').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetChapterForm() {
+            document.getElementById('chapterForm').action = '{{ route("admin.chapters.store") }}';
+            document.getElementById('chapterMethodInput').value = 'POST';
+            document.getElementById('chapterForm').reset();
+            document.getElementById('chapterFormTitle').innerText = 'Tambah Bab';
+            document.getElementById('chapterFormSubtitle').innerText = 'Masukkan data untuk menambahkan bab baru';
+            document.getElementById('chapterCancelBtn').style.display = 'none';
+        }
+
+        // Shortcut to switch to lesson page & auto-fill parent Chapter
+        function quickAddLesson(chapterId) {
+            const btn = document.querySelector('.sub-tab-btn[onclick*="halaman"]');
+            switchSubmateriTab(btn, 'halaman');
+            const select = document.getElementById('lessonInputChapterId');
+            if (select) {
+                select.value = chapterId;
+            }
+            const formTitle = document.getElementById('lessonFormTitle');
+            if (formTitle) {
+                formTitle.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Lesson focus mode toggle
+        function toggleLessonEditorFocusMode() {
+            document.body.classList.toggle('editor-focus-mode');
+            const btn = document.getElementById('lessonEditorFocusToggleBtn');
+            if (btn) {
+                if (document.body.classList.contains('editor-focus-mode')) {
+                    btn.innerHTML = '⛶ Normal';
+                    btn.title = 'Kembali ke Tampilan Normal';
+                    btn.classList.add('active');
+                } else {
+                    btn.innerHTML = '⛶ Fokus';
+                    btn.title = 'Mode Fokus (Sembunyikan Sidebar & Tabel)';
+                    btn.classList.remove('active');
+                }
+            }
+        }
+
+        // Exit focus mode with Escape key (for both Submateri & Lesson)
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && document.body.classList.contains('editor-focus-mode')) {
+                document.body.classList.remove('editor-focus-mode');
+                const btnSub = document.getElementById('editorFocusToggleBtn');
+                if (btnSub) {
+                    btnSub.innerHTML = '⛶ Fokus';
+                    btnSub.classList.remove('active');
+                }
+                const btnLes = document.getElementById('lessonEditorFocusToggleBtn');
+                if (btnLes) {
+                    btnLes.innerHTML = '⛶ Fokus';
+                    btnLes.classList.remove('active');
+                }
+            }
+        });
+
+        // ─── Lesson Editor Blocks Handler ───
+        function addLessonDocBlock(type, content = '') {
+            const container = document.getElementById('lessonDocBlocksContainer');
+            if (!container) return;
+            const block = document.createElement('div');
+            block.className = 'doc-sheet-row doc-block';
+            block.setAttribute('data-type', type);
+            let placeholder = 'Tulis sesuatu...';
+            let contentClass = '';
+            let blockContent = '';
+            let isEditable = true;
+            let src = '';
+            let caption = '';
+            let style = 'info';
+            let icon = 'ⓘ';
+            let text = '';
+            if (type === 'image' || type === 'video') {
+                isEditable = false;
+                if (typeof content === 'object' && content !== null) {
+                    src = content.src || '';
+                    caption = content.caption || '';
+                } else if (typeof content === 'string' && content.trim() !== '') {
+                    try {
+                        const parsed = JSON.parse(content);
+                        src = parsed.src || '';
+                        caption = parsed.caption || '';
+                    } catch (e) {
+                        src = content;
+                    }
+                }
+            } else if (type === 'callout') {
+                isEditable = false;
+                if (typeof content === 'object' && content !== null) {
+                    style = content.style || 'info';
+                    icon = mapToMonochromeIcon(content.icon, 'ⓘ');
+                    text = content.text || '';
+                } else if (typeof content === 'string' && content.trim() !== '') {
+                    try {
+                        const parsed = JSON.parse(content);
+                        style = parsed.style || 'info';
+                        icon = mapToMonochromeIcon(parsed.icon, 'ⓘ');
+                        text = parsed.text || '';
+                    } catch (e) {
+                        text = content;
+                    }
+                }
+            }
+
+            if (type === 'p') {
+                placeholder = 'Tulis paragraf...';
+                contentClass = 'p-block';
+                blockContent = content;
+            } else if (type === 'h2') {
+                placeholder = 'Judul H2...';
+                contentClass = 'h2-block';
+                blockContent = content;
+            } else if (type === 'h3') {
+                placeholder = 'Subjudul H3...';
+                contentClass = 'h3-block';
+                blockContent = content;
+            } else if (type === 'blockquote') {
+                placeholder = 'Tulis kutipan...';
+                contentClass = 'blockquote-block';
+                blockContent = content;
+            } else if (type === 'ol') {
+                placeholder = '1. List item...';
+                contentClass = 'ol-block';
+                blockContent = content;
+            } else if (type === 'ul') {
+                placeholder = '• List item...';
+                contentClass = 'ul-block';
+                blockContent = content;
+            } else if (type === 'pre') {
+                placeholder = 'Kode program...';
+                contentClass = 'pre-block';
+                blockContent = content;
+            } else if (type === 'table') {
+                placeholder = 'Tabel HTML...';
+                contentClass = 'table-block';
+                blockContent = content;
+            } else if (type === 'image') {
+                placeholder = 'Keterangan gambar...';
+                contentClass = 'image-block';
+                const isUploaded = src ? true : false;
+                blockContent = `
+                    <div class="media-editor-container" contenteditable="false">
+                        <div class="media-upload-area" style="display: ${isUploaded ? 'none' : 'flex'};">
+                            <div class="media-upload-icon">📷</div>
+                            <div class="media-upload-title">Sisipkan Gambar</div>
+                            <div class="media-upload-desc">Pilih berkas gambar atau tempel tautan URL</div>
+                            <div class="media-upload-actions">
+                                <button type="button" class="btn-action-outline btn-media-upload" onclick="triggerBlockFileInput(this)">Pilih File</button>
+                                <input type="file" accept="image/*" class="media-file-input-raw" style="display: none;" onchange="handleBlockImageUpload(this)">
+                            </div>
+                            <div class="media-upload-url-row">
+                                <input type="text" class="form-input media-url-input-raw" placeholder="Tempel URL gambar (https://...)">
+                                <button type="button" class="btn-action-outline" onclick="handleBlockImageUrlInput(this)">Terapkan</button>
+                            </div>
+                        </div>
+                        <div class="media-preview-area" style="display: ${isUploaded ? 'block' : 'none'};">
+                            <img class="media-preview-element" src="${src}" alt="Preview Gambar">
+                            <button type="button" class="media-action-badge" onclick="resetMediaBlock(this)" title="Hapus Gambar">Hapus</button>
+                        </div>
+                        <div class="media-caption-editor" contenteditable="true" placeholder="Tulis keterangan gambar (opsional)...">${caption}</div>
+                    </div>
+                `;
+            } else if (type === 'video') {
+                placeholder = 'Keterangan video...';
+                contentClass = 'video-block';
+                const isUploaded = src ? true : false;
+                const isEmbed = isUploaded && isVideoEmbed(src);
+                const embedUrl = isEmbed ? getEmbedUrl(src) : '';
+                blockContent = `
+                    <div class="media-editor-container" contenteditable="false">
+                        <div class="media-upload-area" style="display: ${isUploaded ? 'none' : 'flex'};">
+                            <div class="media-upload-icon">🎥</div>
+                            <div class="media-upload-title">Sisipkan Video</div>
+                            <div class="media-upload-desc">Pilih video (MP4/WebM) atau tempel tautan video/YouTube</div>
+                            <div class="media-upload-actions">
+                                <button type="button" class="btn-action-outline btn-media-upload" onclick="triggerBlockFileInput(this)">Pilih File</button>
+                                <input type="file" accept="video/*" class="media-file-input-raw" style="display: none;" onchange="handleBlockVideoUpload(this)">
+                            </div>
+                            <div class="media-upload-url-row">
+                                <input type="text" class="form-input media-url-input-raw" placeholder="Tempel URL video / YouTube (https://...)">
+                                <button type="button" class="btn-action-outline" onclick="handleBlockVideoUrlInput(this)">Terapkan</button>
+                            </div>
+                        </div>
+                        <div class="media-preview-area" style="display: ${isUploaded ? 'block' : 'none'};">
+                            <div class="media-video-container-element">
+                                ${isEmbed ? `<iframe class="media-preview-iframe" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>` : `<video class="media-preview-video-tag" src="${src}" controls></video>`}
+                            </div>
+                            <button type="button" class="media-action-badge" onclick="resetMediaBlock(this)" title="Hapus Video">Hapus</button>
+                        </div>
+                        <div class="media-caption-editor" contenteditable="true" placeholder="Tulis keterangan video (opsional)...">${caption}</div>
+                    </div>
+                `;
+            } else if (type === 'callout') {
+                placeholder = 'Tulis info box...';
+                contentClass = 'callout-block';
+                blockContent = `
+                    <div class="callout-editor-container" contenteditable="false">
+                        <div class="callout-editor-header">
+                            <select class="form-select callout-style-select" onchange="handleCalloutStyleChange(this)">
+                                <option value="info" ${style === 'info' ? 'selected' : ''}>ⓘ Info</option>
+                                <option value="warning" ${style === 'warning' ? 'selected' : ''}>⚠ Peringatan</option>
+                                <option value="success" ${style === 'success' ? 'selected' : ''}>✓ Sukses / Tip</option>
+                                <option value="danger" ${style === 'danger' ? 'selected' : ''}>✖ Bahaya</option>
+                            </select>
+                        </div>
+                        <div class="callout-editor-body callout-${style}">
+                            <input type="text" class="callout-icon-input" value="${icon}" placeholder="ⓘ" onchange="handleCalloutIconChange(this)">
+                            <div class="callout-editable-content" contenteditable="true" placeholder="Masukkan konten info box di sini...">${text}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            block.innerHTML = `
+                <div class="doc-row-controls">
+                    <button type="button" class="doc-row-control-btn" onclick="moveBlockRow(this, 'up')" title="Pindahkan ke atas">▲</button>
+                    <button type="button" class="doc-row-control-btn" onclick="moveBlockRow(this, 'down')" title="Pindahkan ke bawah">▼</button>
+                </div>
+                <div class="doc-block-content ${contentClass}" ${isEditable ? 'contenteditable="true"' : ''} placeholder="${placeholder}">${blockContent}</div>
+                <button type="button" class="doc-row-remove-btn" onclick="removeBlock(this)" title="Hapus Blok">&times;</button>
+            `;
+            container.appendChild(block);
+
+            if (isEditable) {
+                const editable = block.querySelector('.doc-block-content');
+                if (editable) editable.focus();
+            } else {
+                if (type === 'callout') {
+                    const calloutEditable = block.querySelector('.callout-editable-content');
+                    if (calloutEditable) calloutEditable.focus();
+                } else {
+                    const captionEditable = block.querySelector('.media-caption-editor');
+                    if (captionEditable) captionEditable.focus();
+                }
+            }
+
+            updateLessonDocSidebarOutline();
+        }
+
+        function insertLessonTableBlock() {
+            const rows = prompt("Masukkan jumlah baris:", "3");
+            const cols = prompt("Masukkan jumlah kolom:", "3");
+            if (!rows || !cols) return;
+            let tableHtml = '<table style="width:100%; border-collapse:collapse; margin:16px 0;">';
+            for (let r = 0; r < parseInt(rows); r++) {
+                tableHtml += '<tr>';
+                for (let c = 0; c < parseInt(cols); c++) {
+                    tableHtml += '<td style="border:1px solid rgba(255,255,255,0.08); padding:8px; min-width:50px;">Sel</td>';
+                }
+                tableHtml += '</tr>';
+            }
+            tableHtml += '</table>';
+            addLessonDocBlock('table', tableHtml);
+        }
+
+        // Lesson CRUD Edit & Reset Forms
+        function setLessonEditMode(id, chapterId, title, content, order, status) {
+            document.getElementById('lessonForm').action = '/admin/lessons/' + id;
+            document.getElementById('lessonMethodInput').value = 'PUT';
+            document.getElementById('lessonInputChapterId').value = chapterId;
+            document.getElementById('lessonInputTitle').value = title;
+            document.getElementById('lessonInputOrder').value = order;
+            document.getElementById('lessonInputStatus').value = status || 'published';
+            document.getElementById('lessonInputContent').value = content;
+            const container = document.getElementById('lessonDocBlocksContainer');
+            if (container) {
+                container.innerHTML = '';
+            }
+
+            if (content) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(content, 'text/html');
+                doc.body.childNodes.forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const tag = node.tagName.toLowerCase();
+                        const nodeHtml = node.innerHTML;
+                        if (tag === 'figure' && node.classList.contains('doc-media-image')) {
+                            const img = node.querySelector('img');
+                            const figcaption = node.querySelector('figcaption');
+                            const src = img ? img.getAttribute('src') : '';
+                            const caption = figcaption ? figcaption.innerHTML : '';
+                            addLessonDocBlock('image', { src: src, caption: caption });
+                        } else if (tag === 'figure' && node.classList.contains('doc-media-video')) {
+                            const video = node.querySelector('video');
+                            const iframe = node.querySelector('iframe');
+                            const figcaption = node.querySelector('figcaption');
+                            const src = video ? video.getAttribute('src') : (iframe ? iframe.getAttribute('src') : '');
+                            const caption = figcaption ? figcaption.innerHTML : '';
+                            addLessonDocBlock('video', { src: src, caption: caption });
+                        } else if (tag === 'div' && node.classList.contains('doc-callout')) {
+                            let calloutStyle = 'info';
+                            if (node.classList.contains('callout-warning')) calloutStyle = 'warning';
+                            else if (node.classList.contains('callout-success')) calloutStyle = 'success';
+                            else if (node.classList.contains('callout-danger')) calloutStyle = 'danger';
+                            const iconEl = node.querySelector('.callout-icon');
+                            const contentEl = node.querySelector('.callout-content');
+                            const icon = iconEl ? iconEl.innerText.trim() : 'ⓘ';
+                            const text = contentEl ? contentEl.innerHTML : '';
+                            addLessonDocBlock('callout', { style: calloutStyle, icon: mapToMonochromeIcon(icon), text: text });
+                        } else if (tag === 'img') {
+                            addLessonDocBlock('image', { src: node.getAttribute('src'), caption: node.getAttribute('alt') || '' });
+                        } else if (tag === 'video') {
+                            addLessonDocBlock('video', { src: node.getAttribute('src'), caption: '' });
+                        } else if (tag === 'h2') {
+                            addLessonDocBlock('h2', nodeHtml);
+                        } else if (tag === 'h3') {
+                            addLessonDocBlock('h3', nodeHtml);
+                        } else if (tag === 'blockquote') {
+                            addLessonDocBlock('blockquote', nodeHtml);
+                        } else if (tag === 'p') {
+                            addLessonDocBlock('p', nodeHtml);
+                        } else if (tag === 'ul') {
+                            addLessonDocBlock('ul', nodeHtml);
+                        } else if (tag === 'ol') {
+                            addLessonDocBlock('ol', nodeHtml);
+                        } else if (tag === 'pre') {
+                            addLessonDocBlock('pre', nodeHtml);
+                        } else if (tag === 'table') {
+                            addLessonDocBlock('table', node.outerHTML);
+                        } else {
+                            addLessonDocBlock('p', node.outerHTML);
+                        }
+                    } else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+                        addLessonDocBlock('p', node.textContent.trim());
+                    }
+                });
+            }
+
+            document.getElementById('lessonFormTitle').innerText = 'Ubah Halaman';
+            document.getElementById('lessonFormSubtitle').innerText = 'Perbarui data halaman belajar ini';
+            document.getElementById('lessonCancelBtn').style.display = 'block';
+            document.getElementById('lessonFormTitle').scrollIntoView({ behavior: 'smooth' });
+            updateLessonDocSidebarOutline();
+        }
+
+        function resetLessonForm() {
+            document.getElementById('lessonForm').action = '{{ route("admin.lessons.store") }}';
+            document.getElementById('lessonMethodInput').value = 'POST';
+            document.getElementById('lessonForm').reset();
+            const container = document.getElementById('lessonDocBlocksContainer');
+            if (container) {
+                container.innerHTML = '';
+            }
+
+            document.getElementById('lessonFormTitle').innerText = 'Tambah Halaman';
+            document.getElementById('lessonFormSubtitle').innerText = 'Masukkan data untuk menambahkan halaman materi baru';
+            document.getElementById('lessonCancelBtn').style.display = 'none';
+            updateLessonDocSidebarOutline();
+        }
+
+        let lessonOutlineDebounceTimeout = null;
+        function updateLessonDocSidebarOutlineDebounced() {
+            clearTimeout(lessonOutlineDebounceTimeout);
+            lessonOutlineDebounceTimeout = setTimeout(updateLessonDocSidebarOutline, 300);
+        }
+
+        function updateLessonDocSidebarOutline() {
+            const container = document.getElementById('lessonDocSidebarOutline');
+            if (!container) return;
+            const blocks = document.querySelectorAll('#lessonDocBlocksContainer .doc-block');
+            if (blocks.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: rgba(255,255,255,0.15); font-size: 11px; padding: 40px 10px;">
+                        Belum ada struktur.<br>Tambahkan lewat toolbar di atas.
+                    </div>
+                `;
+                return;
+            }
+
+            let outlineHtml = '';
+            blocks.forEach((block, index) => {
+                let blockId = block.getAttribute('id');
+                if (!blockId) {
+                    blockId = `lesson-block-${Date.now()}-${index}`;
+                    block.setAttribute('id', blockId);
+                }
+
+                const type = block.getAttribute('data-type');
+                const contentEl = block.querySelector('.doc-block-content');
+                let rawContent = contentEl ? contentEl.innerText.trim() : '';
+                let badge = 'PR';
+                let itemClass = 'outline-p';
+                let label = 'Paragraf';
+                if (type === 'h2') {
+                    badge = 'H2';
+                    itemClass = 'outline-h2';
+                    label = 'Judul';
+                } else if (type === 'h3') {
+                    badge = 'H3';
+                    itemClass = 'outline-h3';
+                    label = 'Subjudul';
+                } else if (type === 'blockquote') {
+                    badge = 'KP';
+                    itemClass = 'outline-blockquote';
+                    label = 'Kutipan';
+                } else if (type === 'ul') {
+                    badge = 'PL';
+                    itemClass = 'outline-p';
+                    label = 'Point List Bab';
+                } else if (type === 'ol') {
+                    badge = 'PL';
+                    itemClass = 'outline-p';
+                    label = 'Point List number';
+                } else if (type === 'pre') {
+                    badge = 'KD';
+                    itemClass = 'outline-code';
+                    label = 'Kode';
+                } else if (type === 'table') {
+                    badge = 'TB';
+                    itemClass = 'outline-code';
+                    label = 'Tabel';
+                } else if (type === 'image') {
+                    badge = 'GB';
+                    itemClass = 'outline-media';
+                    label = 'Gambar';
+                    const captionEl = block.querySelector('.media-caption-editor');
+                    rawContent = captionEl ? captionEl.innerText.trim() : '';
+                } else if (type === 'video') {
+                    badge = 'VD';
+                    itemClass = 'outline-media';
+                    label = 'Video';
+                    const captionEl = block.querySelector('.media-caption-editor');
+                    rawContent = captionEl ? captionEl.innerText.trim() : '';
+                } else if (type === 'callout') {
+                    badge = 'IF';
+                    itemClass = 'outline-callout';
+                    label = 'Info Box';
+                    const calloutEditable = block.querySelector('.callout-editable-content');
+                    rawContent = calloutEditable ? calloutEditable.innerText.trim() : '';
+                }
+
+                const snippet = rawContent ? rawContent.substring(0, 30) + (rawContent.length > 30 ? '...' : '') : `[${label} Kosong]`;
+                outlineHtml += `
+                    <div class="doc-sidebar-outline-item ${itemClass}" draggable="true" data-target="${blockId}">
+                        <div class="outline-item-drag-handle">☰</div>
+                        <span class="outline-badge">${badge}</span>
+                        <span class="outline-text" onclick="document.getElementById('${blockId}').scrollIntoView({behavior:'smooth', block:'center'})">${snippet}</span>
+                        <button type="button" class="outline-item-remove-btn" onclick="removeBlockById('${blockId}')">&times;</button>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = outlineHtml;
+            initLessonDragAndDrop();
+        }
+
+        let _lessonDragInitialized = false;
+        function initLessonDragAndDrop() {
+            if (_lessonDragInitialized) return;
+            _lessonDragInitialized = true;
+            const container = document.getElementById('lessonDocSidebarOutline');
+            if (!container) { _lessonDragInitialized = false; return; }
+
+            let dragState = null;
+            container.addEventListener('mousedown', function (e) {
+                if (e.target.closest('.outline-item-remove-btn') || e.target.closest('.outline-text')) return;
+                const item = e.target.closest('.doc-sidebar-outline-item');
+                if (!item) return;
+
+                dragState = {
+                    item: item,
+                    startY: e.clientY,
+                    originalNext: item.nextElementSibling,
+                    originalPrev: item.previousElementSibling
+                };
+            });
+
+            container.addEventListener('dragstart', function (e) {
+                const item = e.target.closest('.doc-sidebar-outline-item');
+                if (!item) {
+                    e.preventDefault();
+                    return;
+                }
+                dragSourceEl = item;
+                item.style.opacity = '0.4';
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', item.getAttribute('data-target'));
+            });
+
+            container.addEventListener('dragend', function (e) {
+                const item = e.target.closest('.doc-sidebar-outline-item');
+                if (item) {
+                    item.style.opacity = '1';
+                }
+                document.querySelectorAll('#lessonDocSidebarOutline .doc-sidebar-outline-item').forEach(el => {
+                    el.classList.remove('drag-over');
+                });
+                dragSourceEl = null;
+                dragCounter = 0;
+            });
+
+            container.addEventListener('dragenter', function (e) {
+                e.preventDefault();
+                const item = e.target.closest('.doc-sidebar-outline-item');
+                if (item && item !== dragSourceEl) {
+                    dragCounter++;
+                    item.classList.add('drag-over');
+                }
+            });
+
+            container.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                return false;
+            });
+
+            container.addEventListener('dragleave', function (e) {
+                const item = e.target.closest('.doc-sidebar-outline-item');
+                if (item) {
+                    dragCounter--;
+                    if (dragCounter <= 0) {
+                        item.classList.remove('drag-over');
+                        dragCounter = 0;
+                    }
+                }
+            });
+
+            container.addEventListener('drop', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const targetItem = e.target.closest('.doc-sidebar-outline-item');
+                if (!targetItem || !dragSourceEl || targetItem === dragSourceEl) return;
+
+                const sourceTargetId = dragSourceEl.getAttribute('data-target');
+                const targetTargetId = targetItem.getAttribute('data-target');
+                const sourceBlock = document.getElementById(sourceTargetId);
+                const targetBlock = document.getElementById(targetTargetId);
+                const blocksContainer = document.getElementById('lessonDocBlocksContainer');
+
+                if (sourceBlock && targetBlock && blocksContainer) {
+                    const rect = targetItem.getBoundingClientRect();
+                    const next = (e.clientY - rect.top) > (rect.height / 2);
+                    if (next) {
+                        container.insertBefore(dragSourceEl, targetItem.nextElementSibling);
+                        blocksContainer.insertBefore(sourceBlock, targetBlock.nextElementSibling);
+                    } else {
+                        container.insertBefore(dragSourceEl, targetItem);
+                        blocksContainer.insertBefore(sourceBlock, targetBlock);
+                    }
+                }
+                updateLessonDocSidebarOutline();
+            });
         }
 
         // Sidebar Dynamic Outline & Drag-and-Drop Functions
@@ -2408,15 +3467,20 @@
         function removeBlockById(blockId) {
             const block = document.getElementById(blockId);
             if (block) {
+                const container = block.closest('#lessonDocBlocksContainer');
                 block.remove();
-                updateDocSidebarOutline();
+                if (container) {
+                    updateLessonDocSidebarOutline();
+                } else {
+                    updateDocSidebarOutline();
+                }
             }
         }
 
         function moveBlockRow(button, direction) {
             const row = button.closest('.doc-block');
             if (!row) return;
-            const container = document.getElementById('docBlocksContainer');
+            const container = row.closest('#lessonDocBlocksContainer') ? document.getElementById('lessonDocBlocksContainer') : document.getElementById('docBlocksContainer');
             if (!container) return;
             if (direction === 'up') {
                 const prev = row.previousElementSibling;
@@ -2429,8 +3493,11 @@
                     container.insertBefore(row, next.nextElementSibling);
                 }
             }
-
-            updateDocSidebarOutline();
+            if (container.id === 'lessonDocBlocksContainer') {
+                updateLessonDocSidebarOutline();
+            } else {
+                updateDocSidebarOutline();
+            }
         }
 
         let _dragInitialized = false;
@@ -2800,20 +3867,382 @@
             document.execCommand(command, false, value);
         }
 
-        function setQuizEditMode(id, lessonId, question, correctAnswer, explanation, optA, optB, optC, optD) {
+        // Lessons list for quiz question block dynamic generation
+        const lessonsList = [
+            @foreach($lessons as $l)
+                { id: "{{ $l->id }}", title: "{{ addslashes($l->title) }}" },
+            @endforeach
+        ];
+
+        let questionBlockCount = 0;
+
+        function escapeHtml(text) {
+            if (typeof text !== 'string') return text;
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function getQuestionBlockHtml(index, isEdit = false, data = null) {
+            const prefix = isEdit ? '' : `questions[${index}][`;
+            const suffix = isEdit ? '' : `]`;
+
+            const type = data ? (data.type || 'text') : 'text';
+            const lessonId = data ? data.lesson_id : '';
+            const question = data ? data.question : '';
+            const codeBlock = data ? (data.code_block || '') : '';
+            const imageUrl = data ? (data.image_url || '') : '';
+            const videoUrl = data ? (data.video_url || '') : '';
+            const explanation = data ? (data.explanation || '') : '';
+
+            let optA = '', optB = '', optC = '', optD = '';
+            let puzzleLines = '';
+            let correctAnswerCode = '';
+
+            if (data) {
+                if (type === 'puzzle') {
+                    try {
+                        let parsed = JSON.parse(data.correct_answer);
+                        if (Array.isArray(parsed)) {
+                            puzzleLines = parsed.join('\n');
+                        } else {
+                            puzzleLines = data.correct_answer;
+                        }
+                    } catch (e) {
+                        puzzleLines = data.correct_answer;
+                    }
+                } else if (type === 'code_writing') {
+                    correctAnswerCode = data.correct_answer;
+                } else {
+                    optA = data.optA || '';
+                    optB = data.optB || '';
+                    optC = data.optC || '';
+                    optD = data.optD || '';
+                }
+            }
+
+            let lessonOptionsHtml = '<option value="">-- Pilih Materi Sesi --</option>';
+            lessonsList.forEach(l => {
+                const selected = (l.id == lessonId) ? 'selected' : '';
+                lessonOptionsHtml += `<option value="${l.id}" ${selected}>${escapeHtml(l.title)}</option>`;
+            });
+
+            const isMcqStyle = (type === 'text' || type === 'code') ? 'block' : 'none';
+            const isPuzzleStyle = (type === 'puzzle') ? 'block' : 'none';
+            const isCodeWritingStyle = (type === 'code_writing') ? 'block' : 'none';
+
+            return `
+                <div class="question-block-card" data-index="${index}" style="border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 20px; background: rgba(255, 255, 255, 0.015); position: relative;">
+                    ${(!isEdit && index > 0) ? `
+                        <button type="button" class="btn-remove-block" onclick="removeQuestionBlock(${index})" style="position: absolute; right: 20px; top: 20px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 8px; padding: 4px 10px; font-size: 11px; cursor: pointer; border: none; font-weight: 600;">
+                            Hapus Soal
+                        </button>
+                    ` : ''}
+                    
+                    <h4 style="color: var(--accent-color, #8b5cf6); font-weight: 700; margin-bottom: 16px;">Soal #${index + 1}</h4>
+                    
+                    <div class="form-grid-inputs" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label class="form-label">Materi Sesi (Lesson)</label>
+                            <select class="form-select" name="${prefix}lesson_id${suffix}" required>
+                                ${lessonOptionsHtml}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tipe Pertanyaan</label>
+                            <select class="form-select qz-type-select" name="${prefix}type${suffix}" onchange="toggleQzTypeFields(this)" required>
+                                <option value="text" ${type === 'text' ? 'selected' : ''}>Pilihan Ganda (Teks)</option>
+                                <option value="code" ${type === 'code' ? 'selected' : ''}>Pilihan Ganda (Kode)</option>
+                                <option value="puzzle" ${type === 'puzzle' ? 'selected' : ''}>Puzzle Sambung Code</option>
+                                <option value="code_writing" ${type === 'code_writing' ? 'selected' : ''}>Tulis Code Sendiri</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label">Pertanyaan Soal</label>
+                        <textarea class="form-input" name="${prefix}question${suffix}" placeholder="Masukkan teks pertanyaan..." required style="height: 60px; min-height: 60px; resize: vertical;">${escapeHtml(question)}</textarea>
+                    </div>
+                    
+                    <div class="form-grid-inputs" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label class="form-label">Code Block (Opsional)</label>
+                            <textarea class="form-input text-monospace" name="${prefix}code_block${suffix}" placeholder="Masukkan kode pendukung pertanyaan..." style="height: 100px; min-height: 100px; font-family: monospace; font-size: 12px; resize: vertical;">${escapeHtml(codeBlock)}</textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Media Upload (Gambar/Video - Opsional)</label>
+                            <div class="media-upload-area" style="border: 2px dashed var(--border-color); border-radius: 12px; padding: 15px; text-align: center; background: rgba(0,0,0,0.2); position: relative; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <input type="file" class="quiz-media-file-input" style="opacity: 0; position: absolute; width:100%; height:100%; left:0; top:0; cursor:pointer;" onchange="handleQuizMediaUpload(this)">
+                                
+                                <div class="upload-placeholder" style="color: var(--text-muted); pointer-events: none; display: ${(imageUrl || videoUrl) ? 'none' : 'block'};">
+                                    <i class='bx bx-cloud-upload' style="font-size: 32px; color: var(--accent-color, #8b5cf6);"></i>
+                                    <p style="font-size: 12px; margin: 4px 0 0 0;">Drag & drop atau klik untuk upload</p>
+                                </div>
+                                
+                                <div class="upload-spinner" style="display: none; pointer-events: none; color: var(--text-muted);">
+                                    <i class='bx bx-loader-alt bx-spin' style="font-size: 24px;"></i>
+                                    <p style="font-size: 11px; margin: 4px 0 0 0;">Mengunggah...</p>
+                                </div>
+                                
+                                <div class="upload-preview" style="margin-top: 10px; display: ${(imageUrl || videoUrl) ? 'block' : 'none'};">
+                                    ${imageUrl ? `<img src="${imageUrl}" style="max-height: 80px; max-width: 100%; border-radius: 6px; object-fit: contain;">` : ''}
+                                    ${videoUrl ? `<video src="${videoUrl}" style="max-height: 80px; max-width: 100%; border-radius: 6px;" controls></video>` : ''}
+                                </div>
+                                
+                                <input type="hidden" name="${prefix}image_url${suffix}" class="quiz-image-url" value="${imageUrl}">
+                                <input type="hidden" name="${prefix}video_url${suffix}" class="quiz-video-url" value="${videoUrl}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- MCQ Option Fields -->
+                    <div class="mcq-options-container" style="display: ${isMcqStyle}; margin-bottom: 16px;">
+                        <div class="form-grid-inputs" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                            <div class="form-group">
+                                <label class="form-label">Pilihan A</label>
+                                <input class="form-input qz-opt-input" type="text" name="${prefix}option_a${suffix}" value="${escapeHtml(optA)}" placeholder="Jawaban A">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Pilihan B</label>
+                                <input class="form-input qz-opt-input" type="text" name="${prefix}option_b${suffix}" value="${escapeHtml(optB)}" placeholder="Jawaban B">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Pilihan C</label>
+                                <input class="form-input qz-opt-input" type="text" name="${prefix}option_c${suffix}" value="${escapeHtml(optC)}" placeholder="Jawaban C">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Pilihan D</label>
+                                <input class="form-input qz-opt-input" type="text" name="${prefix}option_d${suffix}" value="${escapeHtml(optD)}" placeholder="Jawaban D">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="width: 50%;">
+                            <label class="form-label">Kunci Jawaban Benar</label>
+                            <select class="form-select qz-correct-select" name="${prefix}correct_answer${suffix}">
+                                <option value="a" ${(data && data.correct_answer === 'a') ? 'selected' : ''}>Pilihan A</option>
+                                <option value="b" ${(data && data.correct_answer === 'b') ? 'selected' : ''}>Pilihan B</option>
+                                <option value="c" ${(data && data.correct_answer === 'c') ? 'selected' : ''}>Pilihan C</option>
+                                <option value="d" ${(data && data.correct_answer === 'd') ? 'selected' : ''}>Pilihan D</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Puzzle Option Fields -->
+                    <div class="puzzle-options-container" style="display: ${isPuzzleStyle}; margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label class="form-label">Baris Kode Puzzle (Masukkan baris kode berurutan, satu baris per baris kode)</label>
+                            <textarea class="form-input text-monospace" name="${prefix}puzzle_lines${suffix}" placeholder="Contoh:\nlet x = 5;\nconsole.log(x);\nreturn x;" style="height: 120px; min-height: 120px; font-family: monospace; font-size: 12px; resize: vertical; white-space: pre;">${escapeHtml(puzzleLines)}</textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Code Writing Option Fields -->
+                    <div class="code-writing-options-container" style="display: ${isCodeWritingStyle}; margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label class="form-label">Kunci Jawaban Kode (Tulis kode yang benar untuk dicocokkan dengan jawaban user)</label>
+                            <textarea class="form-input text-monospace" name="${prefix}correct_answer_code${suffix}" placeholder="Masukkan kunci jawaban kode..." style="height: 120px; min-height: 120px; font-family: monospace; font-size: 12px; resize: vertical; white-space: pre;">${escapeHtml(correctAnswerCode)}</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Penjelasan / Pembahasan (Opsional)</label>
+                        <textarea class="form-input" name="${prefix}explanation${suffix}" placeholder="Masukkan pembahasan jawaban..." style="height: 50px; min-height: 50px; resize: vertical;">${escapeHtml(explanation)}</textarea>
+                    </div>
+                </div>
+            `;
+        }
+
+        function addQuestionBlock(data = null) {
+            const container = document.getElementById('quizQuestionsContainer');
+            if (!container) return;
+            const newIndex = questionBlockCount;
+            const blockHtml = getQuestionBlockHtml(newIndex, false, data);
+
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = blockHtml;
+            const blockElement = wrapper.firstElementChild;
+            container.appendChild(blockElement);
+
+            questionBlockCount++;
+
+            const typeSelect = blockElement.querySelector('.qz-type-select');
+            if (typeSelect) {
+                toggleQzTypeFields(typeSelect);
+            }
+        }
+
+        function removeQuestionBlock(index) {
+            const block = document.querySelector(`.question-block-card[data-index="${index}"]`);
+            if (block) {
+                block.remove();
+            }
+            const remaining = document.querySelectorAll('.question-block-card');
+            remaining.forEach((card, newIdx) => {
+                card.setAttribute('data-index', newIdx);
+                const title = card.querySelector('h4');
+                if (title) title.innerText = `Soal #${newIdx + 1}`;
+
+                card.querySelectorAll('input, select, textarea').forEach(input => {
+                    const name = input.name;
+                    if (name && name.includes('questions[')) {
+                        const field = name.substring(name.lastIndexOf(']') + 2);
+                        input.name = `questions[${newIdx}][${field}`;
+                    }
+                });
+            });
+            questionBlockCount = remaining.length;
+        }
+
+        function toggleQzTypeFields(select) {
+            const blockCard = select.closest('.question-block-card');
+            if (!blockCard) return;
+            const type = select.value;
+            const mcqContainer = blockCard.querySelector('.mcq-options-container');
+            const puzzleContainer = blockCard.querySelector('.puzzle-options-container');
+            const codeWritingContainer = blockCard.querySelector('.code-writing-options-container');
+
+            if (type === 'puzzle') {
+                mcqContainer.style.display = 'none';
+                puzzleContainer.style.display = 'block';
+                if (codeWritingContainer) codeWritingContainer.style.display = 'none';
+
+                mcqContainer.querySelectorAll('input').forEach(i => i.required = false);
+                puzzleContainer.querySelector('textarea').required = true;
+                if (codeWritingContainer) codeWritingContainer.querySelector('textarea').required = false;
+            } else if (type === 'code_writing') {
+                mcqContainer.style.display = 'none';
+                puzzleContainer.style.display = 'none';
+                if (codeWritingContainer) codeWritingContainer.style.display = 'block';
+
+                mcqContainer.querySelectorAll('input').forEach(i => i.required = false);
+                puzzleContainer.querySelector('textarea').required = false;
+                if (codeWritingContainer) codeWritingContainer.querySelector('textarea').required = true;
+            } else {
+                mcqContainer.style.display = 'block';
+                puzzleContainer.style.display = 'none';
+                if (codeWritingContainer) codeWritingContainer.style.display = 'none';
+
+                mcqContainer.querySelectorAll('input').forEach(i => i.required = true);
+                puzzleContainer.querySelector('textarea').required = false;
+                if (codeWritingContainer) codeWritingContainer.querySelector('textarea').required = false;
+
+                mcqContainer.querySelectorAll('.qz-opt-input').forEach(input => {
+                    if (type === 'code') {
+                        input.style.fontFamily = 'monospace';
+                        input.style.fontSize = '12px';
+                    } else {
+                        input.style.fontFamily = '';
+                        input.style.fontSize = '';
+                    }
+                });
+            }
+        }
+
+        function handleQuizMediaUpload(input) {
+            const blockCard = input.closest('.question-block-card');
+            if (!blockCard) return;
+
+            const file = input.files[0];
+            if (!file) return;
+
+            const uploadPlaceholder = blockCard.querySelector('.upload-placeholder');
+            const uploadSpinner = blockCard.querySelector('.upload-spinner');
+            const uploadPreview = blockCard.querySelector('.upload-preview');
+            const imgUrlInput = blockCard.querySelector('.quiz-image-url');
+            const videoUrlInput = blockCard.querySelector('.quiz-video-url');
+
+            uploadPlaceholder.style.display = 'none';
+            uploadSpinner.style.display = 'block';
+            uploadPreview.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('{{ route("admin.media.upload") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    uploadSpinner.style.display = 'none';
+                    if (data.success && data.url) {
+                        const fileType = file.type;
+                        if (fileType.startsWith('image/')) {
+                            imgUrlInput.value = data.url;
+                            videoUrlInput.value = '';
+                            uploadPreview.innerHTML = `<img src="${data.url}" style="max-height: 80px; max-width: 100%; border-radius: 6px; object-fit: contain;">`;
+                        } else if (fileType.startsWith('video/')) {
+                            videoUrlInput.value = data.url;
+                            imgUrlInput.value = '';
+                            uploadPreview.innerHTML = `<video src="${data.url}" style="max-height: 80px; max-width: 100%; border-radius: 6px;" controls></video>`;
+                        }
+                        uploadPreview.style.display = 'block';
+                    } else {
+                        alert('Upload gagal: ' + (data.error || 'Terjadi kesalahan'));
+                        uploadPlaceholder.style.display = 'block';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    uploadSpinner.style.display = 'none';
+                    uploadPlaceholder.style.display = 'block';
+                    alert('Upload gagal. Coba lagi.');
+                });
+        }
+
+        function setQuizEditMode(id, lessonId, type, question, imageUrl, videoUrl, codeBlock, correctAnswer, explanation, optA, optB, optC, optD) {
             document.getElementById('quizForm').action = '/admin/quizzes/' + id;
             document.getElementById('quizMethodInput').value = 'PUT';
-            document.getElementById('qzLessonId').value = lessonId;
-            document.getElementById('qzQuestion').value = question;
-            document.getElementById('qzCorrect').value = correctAnswer;
-            document.getElementById('qzExpl').value = explanation;
-            document.getElementById('qzOptA').value = optA;
-            document.getElementById('qzOptB').value = optB;
-            document.getElementById('qzOptC').value = optC;
-            document.getElementById('qzOptD').value = optD;
+
+            document.getElementById('batchButtonsRow').style.display = 'none';
+
+            const container = document.getElementById('quizQuestionsContainer');
+            container.innerHTML = '';
+            questionBlockCount = 0;
+
+            const data = {
+                lesson_id: lessonId,
+                type: type,
+                question: question,
+                image_url: imageUrl,
+                video_url: videoUrl,
+                code_block: codeBlock,
+                correct_answer: correctAnswer,
+                explanation: explanation,
+                optA: optA,
+                optB: optB,
+                optC: optC,
+                optD: optD
+            };
+
+            const blockHtml = getQuestionBlockHtml(0, true, data);
+            container.innerHTML = blockHtml;
+
+            const blockCard = container.querySelector('.question-block-card');
+            const correctSelect = blockCard.querySelector('.qz-correct-select');
+            if (correctSelect) {
+                if (correctAnswer === optA) correctSelect.value = 'a';
+                else if (correctAnswer === optB) correctSelect.value = 'b';
+                else if (correctAnswer === optC) correctSelect.value = 'c';
+                else if (correctAnswer === optD) correctSelect.value = 'd';
+                else correctSelect.value = correctAnswer;
+            }
+
+            const typeSelect = blockCard.querySelector('.qz-type-select');
+            if (typeSelect) {
+                toggleQzTypeFields(typeSelect);
+            }
+
             document.getElementById('quizFormTitle').innerText = 'Ubah Soal Kuis';
-            document.getElementById('quizFormSubtitle').innerText = 'Ubah pengaturan kuis pilihan ganda yang dipilih';
+            document.getElementById('quizFormSubtitle').innerText = 'Ubah pengaturan kuis pilihan ganda, kode, atau puzzle yang dipilih';
             document.getElementById('quizCancelBtn').style.display = 'block';
+
             const formCard = document.getElementById('quizFormTitle');
             if (formCard) {
                 formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2823,10 +4252,21 @@
         function resetQuizForm() {
             document.getElementById('quizForm').action = '{{ route("admin.quizzes.store") }}';
             document.getElementById('quizMethodInput').value = 'POST';
-            document.getElementById('quizForm').reset();
+
+            const batchRow = document.getElementById('batchButtonsRow');
+            if (batchRow) batchRow.style.display = 'flex';
+
+            const container = document.getElementById('quizQuestionsContainer');
+            if (container) container.innerHTML = '';
+            questionBlockCount = 0;
+
+            addQuestionBlock();
+
             document.getElementById('quizFormTitle').innerText = 'Tambah Soal Baru';
-            document.getElementById('quizFormSubtitle').innerText = 'Masukkan data untuk menambahkan kuis pilihan ganda baru';
-            document.getElementById('quizCancelBtn').style.display = 'none';
+            document.getElementById('quizFormSubtitle').innerText = 'Masukkan data untuk menambahkan kuis pilihan ganda, kode, atau puzzle baru';
+
+            const cancelBtn = document.getElementById('quizCancelBtn');
+            if (cancelBtn) cancelBtn.style.display = 'none';
         }
 
         function openEditExp(id, name, exp) {
@@ -3099,6 +4539,17 @@
         // Trigger load connection check if default active is tab database
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Bind addQuestionBtn event listener
+            const addQBtn = document.getElementById('addQuestionBtn');
+            if (addQBtn) {
+                addQBtn.addEventListener('click', function () {
+                    addQuestionBlock();
+                });
+            }
+
+            // Initialize first question block
+            resetQuizForm();
+
             const params = new URLSearchParams(window.location.search);
             if (params.get('tab') === 'database') {
                 setTimeout(() => {
@@ -3194,7 +4645,6 @@
             }
 
             // Bind input listener to docBlocksContainer to update sidebar dynamically on typing
-
             const docBlocksContainer = document.getElementById('docBlocksContainer');
             if (docBlocksContainer) {
                 docBlocksContainer.addEventListener('input', function (e) {
@@ -3204,10 +4654,378 @@
                 });
             }
 
-            // Initialize sidebar outline on load
+            // Bind submit event for Lesson form to copy block elements to hidden field
+            const lessonForm = document.getElementById('lessonForm');
+            if (lessonForm) {
+                lessonForm.addEventListener('submit', function (e) {
+                    const contentInput = document.getElementById('lessonInputContent');
+                    if (contentInput) {
+                        let html = '';
+                        const blocks = document.querySelectorAll('#lessonDocBlocksContainer .doc-block');
+                        blocks.forEach(block => {
+                            const type = block.getAttribute('data-type');
+                            const contentEl = block.querySelector('.doc-block-content');
+                            let content = contentEl ? contentEl.innerHTML.trim() : '';
+                            if (content === '<br>' || content === '<p><br></p>') {
+                                content = '';
+                            }
 
+                            if (type === 'image') {
+                                const previewImg = block.querySelector('.media-preview-element');
+                                const captionEditor = block.querySelector('.media-caption-editor');
+                                const imgUrl = previewImg ? previewImg.getAttribute('src') : '';
+                                const captionText = captionEditor ? captionEditor.innerHTML.trim() : '';
+                                if (imgUrl) {
+                                    html += `<figure class="doc-media-image"><img src="${imgUrl}" alt="${captionText.replace(/"/g, '&quot;')}">${captionText ? `<figcaption>${captionText}</figcaption>` : ''}</figure>`;
+                                }
+                            } else if (type === 'video') {
+                                const videoTag = block.querySelector('.media-preview-video-tag');
+                                const iframeTag = block.querySelector('.media-preview-iframe');
+                                const captionEditor = block.querySelector('.media-caption-editor');
+                                const captionText = captionEditor ? captionEditor.innerHTML.trim() : '';
+                                let videoUrl = '';
+                                let isEmbed = false;
+                                if (videoTag) {
+                                    videoUrl = videoTag.getAttribute('src');
+                                } else if (iframeTag) {
+                                    videoUrl = iframeTag.getAttribute('src');
+                                    isEmbed = true;
+                                }
+
+                                if (videoUrl) {
+                                    if (isEmbed) {
+                                        html += `<figure class="doc-media-video"><iframe src="${videoUrl}" frameborder="0" allowfullscreen></iframe>${captionText ? `<figcaption>${captionText}</figcaption>` : ''}</figure>`;
+                                    } else {
+                                        html += `<figure class="doc-media-video"><video controls src="${videoUrl}"></video>${captionText ? `<figcaption>${captionText}</figcaption>` : ''}</figure>`;
+                                    }
+                                }
+                            } else if (type === 'callout') {
+                                const styleSelect = block.querySelector('.callout-style-select');
+                                const iconInput = block.querySelector('.callout-icon-input');
+                                const contentEditor = block.querySelector('.callout-editable-content');
+                                const calloutStyle = styleSelect ? styleSelect.value : 'info';
+                                const calloutIcon = iconInput ? iconInput.value.trim() : 'ⓘ';
+                                const calloutText = contentEditor ? contentEditor.innerHTML.trim() : '';
+                                if (calloutText) {
+                                    html += `<div class="doc-callout callout-${calloutStyle}"><span class="callout-icon">${calloutIcon}</span><div class="callout-content">${calloutText}</div></div>`;
+                                }
+                            } else if (content) {
+                                if (type === 'p') {
+                                    html += `<p>${content}</p>`;
+                                } else if (type === 'h2') {
+                                    html += `<h2>${content}</h2>`;
+                                } else if (type === 'h3') {
+                                    html += `<h3>${content}</h3>`;
+                                } else if (type === 'blockquote') {
+                                    html += `<blockquote>${content}</blockquote>`;
+                                } else if (type === 'ul') {
+                                    html += `<ul>${content}</ul>`;
+                                } else if (type === 'ol') {
+                                    html += `<ol>${content}</ol>`;
+                                } else if (type === 'pre') {
+                                    html += `<pre>${content}</pre>`;
+                                } else if (type === 'table') {
+                                    if (content.startsWith('<table')) {
+                                        html += content;
+                                    } else {
+                                        html += `<table style="width:100%; border-collapse:collapse; margin:16px 0;">${content}</table>`;
+                                    }
+                                }
+                            }
+                        });
+                        contentInput.value = html;
+                    }
+                });
+            }
+
+            // Bind input listener to lessonDocBlocksContainer to update sidebar dynamically on typing
+            const lessonDocBlocksContainer = document.getElementById('lessonDocBlocksContainer');
+            if (lessonDocBlocksContainer) {
+                lessonDocBlocksContainer.addEventListener('input', function (e) {
+                    if (e.target.classList.contains('doc-block-content')) {
+                        updateLessonDocSidebarOutlineDebounced();
+                    }
+                });
+            }
+
+            // Switch sub-tab if set in URL parameters
+            const subtab = params.get('subtab');
+            if (subtab) {
+                setTimeout(() => {
+                    const btn = document.querySelector(`.sub-tab-btn[onclick*="${subtab}"]`);
+                    if (btn) btn.click();
+                }, 100);
+            }
+
+            // Initialize sidebar outlines on load
             updateDocSidebarOutline();
+            updateLessonDocSidebarOutline();
+
+            // Custom Confirm Popup Logic (Two-Step Confirm)
+            window.showCustomConfirm = function (options = {}) {
+                const title = options.title || 'Persetujuan';
+                const message = options.message || 'yakin ingin menghapus data ini';
+                const subdesc = options.subdesc || 'Table-data-coloumn=2';
+                const confirmText = options.confirmText || 'Delete';
+                const cancelText = options.cancelText || 'Batal';
+
+                return new Promise((resolve) => {
+                    const modal = document.getElementById('tcConfirmModal');
+
+                    // Slide 1 elements
+                    const titleEl1 = document.getElementById('tcConfirmTitle1');
+                    const descEl1 = document.getElementById('tcConfirmDesc1');
+                    const subdescEl1 = document.getElementById('tcConfirmSubdesc1');
+                    const slide1 = document.getElementById('tcConfirmSlide1');
+                    const container = document.getElementById('tcSlideContainer');
+                    const handle = document.getElementById('tcSlideHandle');
+
+                    // Slide 2 elements
+                    const titleEl2 = document.getElementById('tcConfirmTitle2');
+                    const descEl2 = document.getElementById('tcConfirmDesc2');
+                    const subdescEl2 = document.getElementById('tcConfirmSubdesc2');
+                    const slide2 = document.getElementById('tcConfirmSlide2');
+                    const confirmBtn = document.getElementById('tcConfirmConfirmBtn');
+                    const cancelBtn = document.getElementById('tcConfirmCancelBtn');
+
+                    // Populate labels
+                    titleEl1.textContent = title;
+                    descEl1.textContent = message;
+                    if (subdescEl1) subdescEl1.textContent = subdesc;
+
+                    titleEl2.textContent = title;
+                    descEl2.textContent = message;
+                    if (subdescEl2) subdescEl2.textContent = subdesc;
+                    confirmBtn.textContent = confirmText;
+                    cancelBtn.textContent = cancelText;
+
+                    // Reset slide state
+                    slide1.classList.add('active');
+                    slide2.classList.remove('active');
+                    container.classList.remove('drag-left', 'drag-right');
+                    const hintEl = document.getElementById('tcSlideHint');
+                    if (hintEl) {
+                        hintEl.textContent = '';
+                    }
+
+                    modal.classList.add('active');
+
+                    // Compute dimensions with fallback
+                    let containerWidth = container.clientWidth || 374;
+                    let handleWidth = handle.clientWidth || 90;
+                    let leftLimit = 4;
+                    let rightLimit = containerWidth - handleWidth - 4;
+                    let centerLeft = (containerWidth - handleWidth) / 2;
+
+                    // Set initial position to center
+                    handle.style.left = centerLeft + 'px';
+                    handle.style.transition = 'none';
+
+                    // Recalculate and center after layout settles
+                    setTimeout(() => {
+                        containerWidth = container.clientWidth || 374;
+                        handleWidth = handle.clientWidth || 90;
+                        rightLimit = containerWidth - handleWidth - 4;
+                        centerLeft = (containerWidth - handleWidth) / 2;
+                        if (!isDragging) {
+                            handle.style.left = centerLeft + 'px';
+                        }
+                    }, 50);
+
+                    function updatePositions() {
+                        containerWidth = container.clientWidth || 374;
+                        handleWidth = handle.clientWidth || 90;
+                        rightLimit = containerWidth - handleWidth - 4;
+                        centerLeft = (containerWidth - handleWidth) / 2;
+
+                        // Only reposition if not currently dragging
+                        if (!isDragging) {
+                            handle.style.transition = 'none';
+                            handle.style.left = centerLeft + 'px';
+                        }
+                    }
+                    window.addEventListener('resize', updatePositions);
+
+                    let isDragging = false;
+                    let startX = 0;
+                    let startLeft = centerLeft;
+
+                    function onDragStart(e) {
+                        // Recalculate dimensions on drag start to ensure correct real-time values
+                        containerWidth = container.clientWidth || 374;
+                        handleWidth = handle.clientWidth || 90;
+                        rightLimit = containerWidth - handleWidth - 4;
+                        centerLeft = (containerWidth - handleWidth) / 2;
+
+                        isDragging = true;
+                        startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+                        startLeft = parseFloat(handle.style.left) || centerLeft;
+                        handle.style.transition = 'none';
+
+                        document.addEventListener('mousemove', onDragMove);
+                        document.addEventListener('mouseup', onDragEnd);
+                        document.addEventListener('touchmove', onDragMove, { passive: false });
+                        document.addEventListener('touchend', onDragEnd);
+                    }
+
+                    function onDragMove(e) {
+                        if (!isDragging) return;
+                        if (e.cancelable) e.preventDefault();
+                        const currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+                        const deltaX = currentX - startX;
+                        let newLeft = startLeft + deltaX;
+
+                        if (newLeft < leftLimit) newLeft = leftLimit;
+                        if (newLeft > rightLimit) newLeft = rightLimit;
+
+                        handle.style.left = newLeft + 'px';
+
+                        if (newLeft < centerLeft - 5) {
+                            container.classList.add('drag-left');
+                            container.classList.remove('drag-right');
+                            if (hintEl) hintEl.textContent = 'Lepaskan untuk Batal';
+                        } else if (newLeft > centerLeft + 5) {
+                            container.classList.add('drag-right');
+                            container.classList.remove('drag-left');
+                            if (hintEl) hintEl.textContent = 'Lepaskan untuk Lanjut';
+                        } else {
+                            container.classList.remove('drag-left', 'drag-right');
+                            if (hintEl) hintEl.textContent = '';
+                        }
+                    }
+
+                    function onDragEnd() {
+                        if (!isDragging) return;
+                        isDragging = false;
+
+                        document.removeEventListener('mousemove', onDragMove);
+                        document.removeEventListener('mouseup', onDragEnd);
+                        document.removeEventListener('touchmove', onDragMove);
+                        document.removeEventListener('touchend', onDragEnd);
+
+                        const currentLeft = parseFloat(handle.style.left) || centerLeft;
+                        const travelLeft = centerLeft - leftLimit;
+                        const travelRight = rightLimit - centerLeft;
+
+                        if (currentLeft <= leftLimit + 15 || currentLeft <= centerLeft - 0.8 * travelLeft) {
+                            // Cancel
+                            handle.style.transition = 'left 0.15s ease';
+                            handle.style.left = leftLimit + 'px';
+                            setTimeout(() => {
+                                cleanup(false);
+                            }, 150);
+                        } else if (currentLeft >= rightLimit - 15 || currentLeft >= centerLeft + 0.8 * travelRight) {
+                            // Confirm Slide 1
+                            handle.style.transition = 'left 0.15s ease';
+                            handle.style.left = rightLimit + 'px';
+                            setTimeout(() => {
+                                slide1.classList.remove('active');
+                                slide2.classList.add('active');
+                            }, 200);
+                        } else {
+                            // Bounce back
+                            handle.style.transition = 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
+                            handle.style.left = centerLeft + 'px';
+                            setTimeout(() => {
+                                container.classList.remove('drag-left', 'drag-right');
+                                if (hintEl) hintEl.textContent = '';
+                            }, 250);
+                        }
+                    }
+
+                    const cleanup = (value) => {
+                        modal.classList.remove('active');
+                        window.removeEventListener('resize', updatePositions);
+                        handle.removeEventListener('mousedown', onDragStart);
+                        handle.removeEventListener('touchstart', onDragStart);
+
+                        confirmBtn.removeEventListener('click', onConfirmClick);
+                        cancelBtn.removeEventListener('click', onCancelClick);
+                        modal.removeEventListener('click', onOverlayClick);
+                        resolve(value);
+                    };
+
+                    function onConfirmClick() {
+                        cleanup(true);
+                    }
+
+                    function onCancelClick() {
+                        cleanup(false);
+                    }
+
+                    function onOverlayClick(e) {
+                        if (e.target === modal) {
+                            cleanup(false);
+                        }
+                    }
+
+                    handle.addEventListener('mousedown', onDragStart);
+                    handle.addEventListener('touchstart', onDragStart);
+                    confirmBtn.addEventListener('click', onConfirmClick);
+                    cancelBtn.addEventListener('click', onCancelClick);
+                    modal.addEventListener('click', onOverlayClick);
+                });
+            };
+
+            // Global Submit Event Interceptor
+            document.addEventListener('submit', async function (e) {
+                const form = e.target;
+                if (form.hasAttribute('data-confirm-message')) {
+                    if (!form.dataset.confirmed) {
+                        e.preventDefault();
+                        const message = form.getAttribute('data-confirm-message');
+                        const title = form.getAttribute('data-confirm-title') || 'Persetujuan';
+                        const confirmText = form.getAttribute('data-confirm-btn') || 'Delete';
+
+                        const confirmed = await window.showCustomConfirm({
+                            title: title,
+                            message: message,
+                            confirmText: confirmText
+                        });
+
+                        if (confirmed) {
+                            form.dataset.confirmed = 'true';
+                            form.submit();
+                        }
+                    } else {
+                        delete form.dataset.confirmed;
+                    }
+                }
+            });
         });
     </script>
+
+    <!-- CUSTOM CONFIRM MODAL -->
+    <div id="tcConfirmModal" class="tc-confirm-overlay">
+        <div class="tc-confirm-box">
+            <!-- SLIDE 1 PANEL -->
+            <div class="tc-confirm-slide active" id="tcConfirmSlide1">
+                <div class="tc-confirm-title" id="tcConfirmTitle1">Persetujuan</div>
+                <div class="tc-confirm-desc" id="tcConfirmDesc1">yakin ingin menghapus data ini</div>
+                <div class="tc-confirm-subdesc" id="tcConfirmSubdesc1">Table-data-coloumn=2</div>
+                <div class="tc-slide-container" id="tcSlideContainer">
+                    <span class="tc-slide-text tc-slide-text-left">Tidak</span>
+                    <span class="tc-slide-hint" id="tcSlideHint">Geser ke Kiri/Kanan</span>
+                    <div class="tc-slide-handle" id="tcSlideHandle"></div>
+                    <span class="tc-slide-text tc-slide-text-right">Iya</span>
+                </div>
+
+            </div>
+
+            <!-- SLIDE 2 PANEL -->
+            <div class="tc-confirm-slide" id="tcConfirmSlide2">
+                <div class="tc-confirm-title" id="tcConfirmTitle2">Persetujuan</div>
+                <div class="tc-confirm-desc" id="tcConfirmDesc2">yakin ingin menghapus data ini</div>
+                <div class="tc-confirm-subdesc" id="tcConfirmSubdesc2">Table-data-coloumn=2</div>
+                <div class="tc-confirm-actions">
+                    <button type="button" class="tc-confirm-btn tc-confirm-btn-cancel"
+                        id="tcConfirmCancelBtn">Batal</button>
+                    <button type="button" class="tc-confirm-btn tc-confirm-btn-confirm"
+                        id="tcConfirmConfirmBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>
