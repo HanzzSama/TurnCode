@@ -1,138 +1,138 @@
 @php
-    $dayMap = [
-        'Monday' => 'Sen',
-        'Tuesday' => 'Sel',
-        'Wednesday' => 'Rab',
-        'Thursday' => 'Kam',
-        'Friday' => 'Jum',
-        'Saturday' => 'Sab',
-        'Sunday' => 'Min',
-    ];
-    $todayName = $dayMap[date('l')];
-    $weekOfMonth = ceil(date('d') / 7);
-    $weekStr = 'Minggu ' . $weekOfMonth;
+$dayMap = [
+    'Monday' => 'Sen',
+    'Tuesday' => 'Sel',
+    'Wednesday' => 'Rab',
+    'Thursday' => 'Kam',
+    'Friday' => 'Jum',
+    'Saturday' => 'Sab',
+    'Sunday' => 'Min',
+];
+$todayName = $dayMap[date('l')];
+$weekOfMonth = ceil(date('d') / 7);
+$weekStr = 'Minggu ' . $weekOfMonth;
 
-    $monthMap = [
-        'Jan' => 'Jan',
-        'Feb' => 'Feb',
-        'Mar' => 'Mar',
-        'Apr' => 'Apr',
-        'May' => 'Mei',
-        'Jun' => 'Jun',
-        'Jul' => 'Jul',
-        'Aug' => 'Ags',
-        'Sep' => 'Sep',
-        'Oct' => 'Okt',
-        'Nov' => 'Nov',
-        'Dec' => 'Des'
-    ];
-    $currentMonthName = $monthMap[date('M')] ?? 'Jan';
-    $weekStrShort = 'M' . $weekOfMonth;
+$monthMap = [
+    'Jan' => 'Jan',
+    'Feb' => 'Feb',
+    'Mar' => 'Mar',
+    'Apr' => 'Apr',
+    'May' => 'Mei',
+    'Jun' => 'Jun',
+    'Jul' => 'Jul',
+    'Aug' => 'Ags',
+    'Sep' => 'Sep',
+    'Oct' => 'Okt',
+    'Nov' => 'Nov',
+    'Dec' => 'Des'
+];
+$currentMonthName = $monthMap[date('M')] ?? 'Jan';
+$weekStrShort = 'M' . $weekOfMonth;
 
-    $todaySchedules = [];
-    $upcomingSchedules = [];
+$todaySchedules = [];
+$upcomingSchedules = [];
 
-    foreach ($schedules as $sch) {
-        $isActiveToday = false;
-        $config = $sch->routine_config;
+foreach ($schedules as $sch) {
+    $isActiveToday = false;
+    $config = $sch->routine_config;
 
-        if ($sch->routine_type === 'Harian') {
-            $days = $config['days'] ?? [];
-            if (empty($days) || in_array($todayName, $days)) {
-                $isActiveToday = true;
-            }
-        } elseif ($sch->routine_type === 'Mingguan') {
-            $days = $config['days'] ?? [];
-            $weeks = $config['weeks'] ?? [];
-            if (in_array($todayName, $days) && (in_array($weekStr, $weeks) || in_array('Tiap Minggu', $weeks))) {
-                $isActiveToday = true;
-            }
-        } elseif ($sch->routine_type === 'Bulanan') {
-            $months = $config['months'] ?? [];
-            $weeks = $config['weeks'] ?? [];
-            if (in_array($currentMonthName, $months) && in_array($weekStrShort, $weeks)) {
-                $isActiveToday = true;
-            }
-        } elseif ($sch->routine_type === 'Custom') {
-            $customDate = $config['date'] ?? '';
-            if ($customDate === date('Y-m-d')) {
-                $isActiveToday = true;
-            }
+    if ($sch->routine_type === 'Harian') {
+        $days = $config['days'] ?? [];
+        if (empty($days) || in_array($todayName, $days)) {
+            $isActiveToday = true;
         }
-
-        if ($isActiveToday) {
-            $todaySchedules[] = $sch;
-        } else {
-            $upcomingSchedules[] = $sch;
+    } elseif ($sch->routine_type === 'Mingguan') {
+        $days = $config['days'] ?? [];
+        $weeks = $config['weeks'] ?? [];
+        if (in_array($todayName, $days) && (in_array($weekStr, $weeks) || in_array('Tiap Minggu', $weeks))) {
+            $isActiveToday = true;
+        }
+    } elseif ($sch->routine_type === 'Bulanan') {
+        $months = $config['months'] ?? [];
+        $weeks = $config['weeks'] ?? [];
+        if (in_array($currentMonthName, $months) && in_array($weekStrShort, $weeks)) {
+            $isActiveToday = true;
+        }
+    } elseif ($sch->routine_type === 'Custom') {
+        $customDate = $config['date'] ?? '';
+        if ($customDate === date('Y-m-d')) {
+            $isActiveToday = true;
         }
     }
 
-    // Sort schedules by start_time
-    usort($todaySchedules, function ($a, $b) {
-        return strcmp($a->start_time, $b->start_time);
-    });
-    usort($upcomingSchedules, function ($a, $b) {
-        return strcmp($a->start_time, $b->start_time);
-    });
-
-    // Calculate total study minutes for today
-    $totalMinutes = 0;
-    foreach ($todaySchedules as $sch) {
-        $start = Carbon\Carbon::parse($sch->start_time);
-        $end = Carbon\Carbon::parse($sch->end_time);
-        if ($end->lt($start)) {
-            $end->addDay();
-        }
-        $totalMinutes += $start->diffInMinutes($end);
+    if ($isActiveToday) {
+        $todaySchedules[] = $sch;
+    } else {
+        $upcomingSchedules[] = $sch;
     }
-    $totalHours = round($totalMinutes / 60, 1);
+}
 
-    $userTier = auth()->user()->tier ?? 'Initiate';
-    $tierColors = [
-        'Initiate' => '168, 162, 158',
-        'Explorer' => '34, 197, 94',
-        'Operator' => '59, 130, 246',
-        'Technician' => '139, 92, 246',
-        'Specialist' => '236, 72, 153',
-        'Professional' => '239, 68, 68',
-        'Senior Professional' => '249, 115, 22',
-        'Lead Engineer' => '234, 179, 8',
-        'Architect' => '6, 182, 212',
-        'Principal' => '15, 118, 110',
-        'Strategist' => '225, 29, 72',
-        'Visionary' => '218, 165, 32',
-    ];
-    $rgbColor = $tierColors[$userTier] ?? '168, 162, 158';
+// Sort schedules by start_time
+usort($todaySchedules, function ($a, $b) {
+    return strcmp($a->start_time, $b->start_time);
+});
+usort($upcomingSchedules, function ($a, $b) {
+    return strcmp($a->start_time, $b->start_time);
+});
 
-    // Set up all tiers mapping for progress cards row
-    $allTiers = [
-        ['name' => 'Initiate', 'level' => 1, 'color' => '168, 162, 158'],
-        ['name' => 'Explorer', 'level' => 2, 'color' => '34, 197, 94'],
-        ['name' => 'Operator', 'level' => 6, 'color' => '59, 130, 246'],
-        ['name' => 'Technician', 'level' => 11, 'color' => '139, 92, 246'],
-        ['name' => 'Specialist', 'level' => 21, 'color' => '236, 72, 153'],
-        ['name' => 'Professional', 'level' => 36, 'color' => '239, 68, 68'],
-        ['name' => 'Senior Professional', 'level' => 56, 'color' => '249, 115, 22'],
-        ['name' => 'Lead Engineer', 'level' => 81, 'color' => '234, 179, 8'],
-        ['name' => 'Architect', 'level' => 111, 'color' => '6, 182, 212'],
-        ['name' => 'Principal', 'level' => 141, 'color' => '15, 118, 110'],
-        ['name' => 'Strategist', 'level' => 171, 'color' => '225, 29, 72'],
-        ['name' => 'Visionary', 'level' => 196, 'color' => '218, 165, 32'],
-    ];
-
-    $currentIndex = 0;
-    foreach ($allTiers as $idx => $t) {
-        if ($t['name'] === $userTier) {
-            $currentIndex = $idx;
-            break;
-        }
+// Calculate total study minutes for today
+$totalMinutes = 0;
+foreach ($todaySchedules as $sch) {
+    $start = Carbon\Carbon::parse($sch->start_time);
+    $end = Carbon\Carbon::parse($sch->end_time);
+    if ($end->lt($start)) {
+        $end->addDay();
     }
+    $totalMinutes += $start->diffInMinutes($end);
+}
+$totalHours = round($totalMinutes / 60, 1);
 
-    $startIdx = $currentIndex;
-    if ($startIdx + 5 > count($allTiers)) {
-        $startIdx = max(0, count($allTiers) - 5);
+$userTier = auth()->user()->tier ?? 'Initiate';
+$tierColors = [
+    'Initiate' => '168, 162, 158',
+    'Explorer' => '34, 197, 94',
+    'Operator' => '59, 130, 246',
+    'Technician' => '139, 92, 246',
+    'Specialist' => '236, 72, 153',
+    'Professional' => '239, 68, 68',
+    'Senior Professional' => '249, 115, 22',
+    'Lead Engineer' => '234, 179, 8',
+    'Architect' => '6, 182, 212',
+    'Principal' => '15, 118, 110',
+    'Strategist' => '225, 29, 72',
+    'Visionary' => '218, 165, 32',
+];
+$rgbColor = $tierColors[$userTier] ?? '168, 162, 158';
+
+// Set up all tiers mapping for progress cards row
+$allTiers = [
+    ['name' => 'Initiate', 'level' => 1, 'color' => '168, 162, 158'],
+    ['name' => 'Explorer', 'level' => 2, 'color' => '34, 197, 94'],
+    ['name' => 'Operator', 'level' => 6, 'color' => '59, 130, 246'],
+    ['name' => 'Technician', 'level' => 11, 'color' => '139, 92, 246'],
+    ['name' => 'Specialist', 'level' => 21, 'color' => '236, 72, 153'],
+    ['name' => 'Professional', 'level' => 36, 'color' => '239, 68, 68'],
+    ['name' => 'Senior Professional', 'level' => 56, 'color' => '249, 115, 22'],
+    ['name' => 'Lead Engineer', 'level' => 81, 'color' => '234, 179, 8'],
+    ['name' => 'Architect', 'level' => 111, 'color' => '6, 182, 212'],
+    ['name' => 'Principal', 'level' => 141, 'color' => '15, 118, 110'],
+    ['name' => 'Strategist', 'level' => 171, 'color' => '225, 29, 72'],
+    ['name' => 'Visionary', 'level' => 196, 'color' => '218, 165, 32'],
+];
+
+$currentIndex = 0;
+foreach ($allTiers as $idx => $t) {
+    if ($t['name'] === $userTier) {
+        $currentIndex = $idx;
+        break;
     }
-    $displayTiers = array_slice($allTiers, $startIdx, 5);
+}
+
+$startIdx = $currentIndex;
+if ($startIdx + 5 > count($allTiers)) {
+    $startIdx = max(0, count($allTiers) - 5);
+}
+$displayTiers = array_slice($allTiers, $startIdx, 5);
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -924,22 +924,22 @@
 
     <!-- FIXED NAVBAR -->
     @php
-        $navUserTier = auth()->user()->tier ?? 'Initiate';
-        $navTierColors = [
-            'Initiate' => '168, 162, 158',
-            'Explorer' => '34, 197, 94',
-            'Operator' => '59, 130, 246',
-            'Technician' => '139, 92, 246',
-            'Specialist' => '236, 72, 153',
-            'Professional' => '239, 68, 68',
-            'Senior Professional' => '249, 115, 22',
-            'Lead Engineer' => '234, 179, 8',
-            'Architect' => '6, 182, 212',
-            'Principal' => '15, 118, 110',
-            'Strategist' => '225, 29, 72',
-            'Visionary' => '218, 165, 32',
-        ];
-        $navRgbColor = $navTierColors[$navUserTier] ?? '168, 162, 158';
+$navUserTier = auth()->user()->tier ?? 'Initiate';
+$navTierColors = [
+    'Initiate' => '168, 162, 158',
+    'Explorer' => '34, 197, 94',
+    'Operator' => '59, 130, 246',
+    'Technician' => '139, 92, 246',
+    'Specialist' => '236, 72, 153',
+    'Professional' => '239, 68, 68',
+    'Senior Professional' => '249, 115, 22',
+    'Lead Engineer' => '234, 179, 8',
+    'Architect' => '6, 182, 212',
+    'Principal' => '15, 118, 110',
+    'Strategist' => '225, 29, 72',
+    'Visionary' => '218, 165, 32',
+];
+$navRgbColor = $navTierColors[$navUserTier] ?? '168, 162, 158';
     @endphp
     <nav class="fixed-navbar">
         <div class="navbar-left">
@@ -961,7 +961,7 @@
             <button class="navbar-menu-btn" id="navMenuBtn" style="position: relative;">
                 <i class='bx bx-grid-alt'></i>
                 @php
-                    $unreadNotificationsCount = isset($notifications) ? $notifications->whereNull('read_at')->count() : 0;
+$unreadNotificationsCount = isset($notifications) ? $notifications->whereNull('read_at')->count() : 0;
                 @endphp
                 <span class="nav-unread-dot"
                     style="position: absolute; top: 12px; right: 12px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; box-shadow: 0 0 8px #ef4444; transition: opacity 0.3s ease, transform 0.3s ease; {{ $unreadNotificationsCount > 0 ? '' : 'display: none; opacity: 0; transform: scale(0);' }}"></span>
@@ -999,6 +999,7 @@
             <div class="hero-card" id="heroCard">
                 <div class="hero-bg-layer" id="heroBg1" style="opacity: 1;"></div>
                 <div class="hero-bg-layer" id="heroBg2" style="opacity: 0;"></div>
+                <div class="hero-bg-layer hero-ad-layer" id="heroBg3" style="opacity: 0; z-index: 1;"></div>
                 <script>
                     (function () {
                         var savedIndex = localStorage.getItem('heroBgIndex') || 0;
@@ -1012,6 +1013,13 @@
                         var bgImg = bgs[savedIndex] || bgs[0];
                         document.getElementById('heroBg1').style.backgroundImage = 'url(' + bgImg + ')';
                     })();
+                    // Iklan images scanned from /images/iklan/
+                    window.__heroAdImages = @json(
+    collect(glob(public_path('images/iklan/*')))
+        ->filter(fn($f) => preg_match('/\.(jpg|jpeg|png|gif|webp|svg)$/i', $f))
+        ->map(fn($f) => '/images/iklan/' . basename($f))
+        ->values()
+);
                 </script>
                 <div class="hero-overlay">
                     <div class="hero-icons">
@@ -1346,21 +1354,21 @@
                 </div>
 
                 @php
-                    $totalLessonsCount = 0;
-                    $completedLessonsCount = 0;
-                    if ($userCourse) {
-                        foreach ($submateris as $sm) {
-                            foreach ($sm->chapters as $ch) {
-                                $totalLessonsCount += $ch->lessons->count();
-                                foreach ($ch->lessons as $les) {
-                                    if (in_array($les->id, $completedLessons)) {
-                                        $completedLessonsCount++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    $courseProgressPct = $totalLessonsCount > 0 ? round(($completedLessonsCount / $totalLessonsCount) * 100) : 0;
+$totalLessonsCount = 0;
+$completedLessonsCount = 0;
+if ($userCourse) {
+    foreach ($submateris as $sm) {
+        foreach ($sm->chapters as $ch) {
+            $totalLessonsCount += $ch->lessons->count();
+            foreach ($ch->lessons as $les) {
+                if (in_array($les->id, $completedLessons)) {
+                    $completedLessonsCount++;
+                }
+            }
+        }
+    }
+}
+$courseProgressPct = $totalLessonsCount > 0 ? round(($completedLessonsCount / $totalLessonsCount) * 100) : 0;
                 @endphp
                 <div class="web-dev-card">
                     <div class="web-dev-pill">
@@ -1383,54 +1391,54 @@
         <!-- UJIAN AKHIR / SERTIFIKAT FOKUS -->
         @if(isset($isCourseCompleted) && $isCourseCompleted)
             @php
-                $activeDots = [
-                    '6,2' => true,
-                    '4,3' => true,
-                    '5,3' => true,
-                    '6,3' => true,
-                    '7,3' => true,
-                    '8,3' => true,
-                    '2,4' => true,
-                    '3,4' => true,
-                    '4,4' => true,
-                    '5,4' => true,
-                    '6,4' => true,
-                    '7,4' => true,
-                    '8,4' => true,
-                    '9,4' => true,
-                    '10,4' => true,
-                    '4,5' => true,
-                    '5,5' => true,
-                    '6,5' => true,
-                    '7,5' => true,
-                    '8,5' => true,
-                    '6,6' => true,
-                    '4,6' => true,
-                    '5,6' => true,
-                    '7,6' => true,
-                    '8,6' => true,
-                    '4,7' => true,
-                    '5,7' => true,
-                    '6,7' => true,
-                    '7,7' => true,
-                    '8,7' => true,
-                    '5,8' => true,
-                    '6,8' => true,
-                    '7,8' => true,
-                    '11,4' => true,
-                    '11,5' => true,
-                    '11,6' => true,
-                    '11,7' => true,
-                    '10,8' => true,
-                    '11,8' => true,
-                    '12,8' => true
-                ];
+    $activeDots = [
+        '6,2' => true,
+        '4,3' => true,
+        '5,3' => true,
+        '6,3' => true,
+        '7,3' => true,
+        '8,3' => true,
+        '2,4' => true,
+        '3,4' => true,
+        '4,4' => true,
+        '5,4' => true,
+        '6,4' => true,
+        '7,4' => true,
+        '8,4' => true,
+        '9,4' => true,
+        '10,4' => true,
+        '4,5' => true,
+        '5,5' => true,
+        '6,5' => true,
+        '7,5' => true,
+        '8,5' => true,
+        '6,6' => true,
+        '4,6' => true,
+        '5,6' => true,
+        '7,6' => true,
+        '8,6' => true,
+        '4,7' => true,
+        '5,7' => true,
+        '6,7' => true,
+        '7,7' => true,
+        '8,7' => true,
+        '5,8' => true,
+        '6,8' => true,
+        '7,8' => true,
+        '11,4' => true,
+        '11,5' => true,
+        '11,6' => true,
+        '11,7' => true,
+        '10,8' => true,
+        '11,8' => true,
+        '12,8' => true
+    ];
             @endphp
             <div class="android-exam-wrapper">
                 @php
-                    $achievements = auth()->user()->achievements ?? [];
-                    $passedExams = $achievements['passed_exams'] ?? [];
-                    $hasPassedExam = $userCourse && in_array($userCourse->id, $passedExams);
+    $achievements = auth()->user()->achievements ?? [];
+    $passedExams = $achievements['passed_exams'] ?? [];
+    $hasPassedExam = $userCourse && in_array($userCourse->id, $passedExams);
                 @endphp
                 <div class="section-header">
                     <h2 class="section-title">Selamat! Kamu telah menyelesaikan semua materi</h2>
@@ -1469,9 +1477,9 @@
                                 @for ($y = 0; $y < 13; $y++)
                                     @for ($x = 0; $x < 13; $x++)
                                         @php
-                                            $isActive = isset($activeDots["$x,$y"]);
-                                            $cx = $x * 10 + 5;
-                                            $cy = $y * 10 + 5;
+            $isActive = isset($activeDots["$x,$y"]);
+            $cx = $x * 10 + 5;
+            $cy = $y * 10 + 5;
                                         @endphp
                                         <circle cx="{{ $cx }}" cy="{{ $cy }}" r="3.5"
                                             class="android-exam-svg-dot {{ $isActive ? 'active' : '' }}" />
@@ -1518,13 +1526,12 @@
                                 <div class="focus-panel {{ $index === 0 ? 'active' : '' }}" id="panel-{{ $int->val }}">
                                     @forelse($int->focusItems as $f)
                                         @php
-                                            $isCompleted = in_array($f->val, $completedFocuses ?? []);
-                                            $isActiveFocus = $f->val === auth()->user()->focus;
+                $isCompleted = in_array($f->val, $completedFocuses ?? []);
+                $isActiveFocus = $f->val === auth()->user()->focus;
                                         @endphp
-                                        <div class="focus-option-card {{ $isActiveFocus ? 'is-active' : '' }} {{ $isCompleted ? 'is-completed' : '' }}" 
-                                             data-interest="{{ $int->val }}" 
-                                             data-focus="{{ $f->val }}"
-                                             @if(!$isActiveFocus) onclick="selectFocusCard(this)" @endif>
+                                        <div class="focus-option-card {{ $isActiveFocus ? 'is-active' : '' }} {{ $isCompleted ? 'is-completed' : '' }}"
+                                            data-interest="{{ $int->val }}" data-focus="{{ $f->val }}" @if(!$isActiveFocus)
+                                            onclick="selectFocusCard(this)" @endif>
                                             <div class="focus-card-header">
                                                 <div class="focus-card-icon">
                                                     {!! $f->icon !!}
@@ -1533,9 +1540,11 @@
                                                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                                                         <span class="focus-card-title">{{ $f->name }}</span>
                                                         @if($isActiveFocus)
-                                                            <span class="focus-badge focus-badge-active"><i class='bx bx-play-circle'></i> Aktif</span>
+                                                            <span class="focus-badge focus-badge-active"><i class='bx bx-play-circle'></i>
+                                                                Aktif</span>
                                                         @elseif($isCompleted)
-                                                            <span class="focus-badge focus-badge-completed"><i class='bx bx-check-circle'></i> Selesai</span>
+                                                            <span class="focus-badge focus-badge-completed"><i
+                                                                    class='bx bx-check-circle'></i> Selesai</span>
                                                         @endif
                                                     </div>
                                                 </div>
@@ -1632,144 +1641,144 @@
             </div>
 
             @php
-                $currentTime = date('H:i');
-                $classifiedTodaySchedules = [];
-                $nextScheduleFound = false;
+$currentTime = date('H:i');
+$classifiedTodaySchedules = [];
+$nextScheduleFound = false;
 
-                foreach ($todaySchedules as $sch) {
-                    $start = date('H:i', strtotime($sch->start_time));
-                    $end = date('H:i', strtotime($sch->end_time));
+foreach ($todaySchedules as $sch) {
+    $start = date('H:i', strtotime($sch->start_time));
+    $end = date('H:i', strtotime($sch->end_time));
 
-                    $status = 'nanti';
-                    $statusLabel = 'Nanti';
-                    $statusDotColor = '#3b82f6'; // blue
+    $status = 'nanti';
+    $statusLabel = 'Nanti';
+    $statusDotColor = '#3b82f6'; // blue
 
-                    if ($currentTime >= $start && $currentTime <= $end) {
-                        $status = 'saat_ini';
-                        $statusLabel = 'Saat ini';
-                        $statusDotColor = '#38b2ac'; // green
-                    } elseif ($currentTime > $end) {
-                        $status = 'selesai';
-                        $statusLabel = 'Selesai';
-                        $statusDotColor = '#a855f7'; // purple
-                    } else {
-                        if (!$nextScheduleFound) {
-                            $status = 'selanjutnya';
-                            $statusLabel = 'Selanjutnya';
-                            $statusDotColor = '#e5e7eb'; // white
-                            $nextScheduleFound = true;
-                        } else {
-                            $status = 'nanti';
-                            $statusLabel = 'Nanti';
-                            $statusDotColor = '#3b82f6'; // blue
-                        }
-                    }
+    if ($currentTime >= $start && $currentTime <= $end) {
+        $status = 'saat_ini';
+        $statusLabel = 'Saat ini';
+        $statusDotColor = '#38b2ac'; // green
+    } elseif ($currentTime > $end) {
+        $status = 'selesai';
+        $statusLabel = 'Selesai';
+        $statusDotColor = '#a855f7'; // purple
+    } else {
+        if (!$nextScheduleFound) {
+            $status = 'selanjutnya';
+            $statusLabel = 'Selanjutnya';
+            $statusDotColor = '#e5e7eb'; // white
+            $nextScheduleFound = true;
+        } else {
+            $status = 'nanti';
+            $statusLabel = 'Nanti';
+            $statusDotColor = '#3b82f6'; // blue
+        }
+    }
 
-                    $config = $sch->routine_config;
-                    $schColor = $config['color'] ?? null;
-                    if ($schColor) {
-                        if ($schColor === 'green') {
-                            $statusDotColor = '#38b2ac';
-                        } elseif ($schColor === 'purple') {
-                            $statusDotColor = '#a855f7';
-                        } elseif ($schColor === 'blue') {
-                            $statusDotColor = '#3b82f6';
-                        } elseif ($schColor === 'white') {
-                            $statusDotColor = '#e5e7eb';
-                        }
-                    }
+    $config = $sch->routine_config;
+    $schColor = $config['color'] ?? null;
+    if ($schColor) {
+        if ($schColor === 'green') {
+            $statusDotColor = '#38b2ac';
+        } elseif ($schColor === 'purple') {
+            $statusDotColor = '#a855f7';
+        } elseif ($schColor === 'blue') {
+            $statusDotColor = '#3b82f6';
+        } elseif ($schColor === 'white') {
+            $statusDotColor = '#e5e7eb';
+        }
+    }
 
-                    $carbonStart = Carbon\Carbon::parse($start);
-                    $carbonEnd = Carbon\Carbon::parse($end);
-                    if ($carbonEnd->lt($carbonStart)) {
-                        $carbonEnd->addDay();
-                    }
-                    $diffMinutes = $carbonStart->diffInMinutes($carbonEnd);
-                    $hoursPart = floor($diffMinutes / 60);
-                    $minsPart = $diffMinutes % 60;
+    $carbonStart = Carbon\Carbon::parse($start);
+    $carbonEnd = Carbon\Carbon::parse($end);
+    if ($carbonEnd->lt($carbonStart)) {
+        $carbonEnd->addDay();
+    }
+    $diffMinutes = $carbonStart->diffInMinutes($carbonEnd);
+    $hoursPart = floor($diffMinutes / 60);
+    $minsPart = $diffMinutes % 60;
 
-                    $durationStr = '';
-                    if ($hoursPart > 0) {
-                        $durationStr .= $hoursPart . ' jam ';
-                    }
-                    if ($minsPart > 0 || $hoursPart == 0) {
-                        $durationStr .= $minsPart . ' menit';
-                    }
-                    $durationStr = trim($durationStr);
+    $durationStr = '';
+    if ($hoursPart > 0) {
+        $durationStr .= $hoursPart . ' jam ';
+    }
+    if ($minsPart > 0 || $hoursPart == 0) {
+        $durationStr .= $minsPart . ' menit';
+    }
+    $durationStr = trim($durationStr);
 
-                    $classifiedTodaySchedules[] = [
-                        'model' => $sch,
-                        'status' => $status,
-                        'status_label' => $statusLabel,
-                        'status_dot' => $statusDotColor,
-                        'duration_str' => $durationStr,
-                        'start' => $start,
-                        'end' => $end,
-                    ];
-                }
+    $classifiedTodaySchedules[] = [
+        'model' => $sch,
+        'status' => $status,
+        'status_label' => $statusLabel,
+        'status_dot' => $statusDotColor,
+        'duration_str' => $durationStr,
+        'start' => $start,
+        'end' => $end,
+    ];
+}
             @endphp
 
             <div class="calendar-row">
                 @for ($i = 0; $i < 7; $i++)
                     @php
-                        $timestamp = strtotime("+$i days");
-                        $dayNameEn = date('l', $timestamp);
-                        $dayNameId = $dayMap[$dayNameEn] ?? 'Sen';
-                        $dateNum = date('d', $timestamp);
-                        $monthNameShort = $monthMap[date('M', $timestamp)] ?? 'Jan';
-                        $fullDateStr = date('Y-m-d', $timestamp);
-                        $isActiveCard = ($i === 0);
+    $timestamp = strtotime("+$i days");
+    $dayNameEn = date('l', $timestamp);
+    $dayNameId = $dayMap[$dayNameEn] ?? 'Sen';
+    $dateNum = date('d', $timestamp);
+    $monthNameShort = $monthMap[date('M', $timestamp)] ?? 'Jan';
+    $fullDateStr = date('Y-m-d', $timestamp);
+    $isActiveCard = ($i === 0);
 
-                        $dayDots = [];
-                        foreach ($schedules as $sch) {
-                            $isActiveOnThisDay = false;
-                            $config = $sch->routine_config;
-                            $wOM = ceil(date('d', $timestamp) / 7);
-                            $wStr = 'Minggu ' . $wOM;
-                            $wStrShort = 'M' . $wOM;
+    $dayDots = [];
+    foreach ($schedules as $sch) {
+        $isActiveOnThisDay = false;
+        $config = $sch->routine_config;
+        $wOM = ceil(date('d', $timestamp) / 7);
+        $wStr = 'Minggu ' . $wOM;
+        $wStrShort = 'M' . $wOM;
 
-                            if ($sch->routine_type === 'Harian') {
-                                $days = $config['days'] ?? [];
-                                if (empty($days) || in_array($dayNameId, $days)) {
-                                    $isActiveOnThisDay = true;
-                                }
-                            } elseif ($sch->routine_type === 'Mingguan') {
-                                $days = $config['days'] ?? [];
-                                $weeks = $config['weeks'] ?? [];
-                                if (in_array($dayNameId, $days) && (in_array($wStr, $weeks) || in_array('Tiap Minggu', $weeks))) {
-                                    $isActiveOnThisDay = true;
-                                }
-                            } elseif ($sch->routine_type === 'Bulanan') {
-                                $months = $config['months'] ?? [];
-                                $weeks = $config['weeks'] ?? [];
-                                if (in_array($monthNameShort, $months) && in_array($wStrShort, $weeks)) {
-                                    $isActiveOnThisDay = true;
-                                }
-                            } elseif ($sch->routine_type === 'Custom') {
-                                $customDate = $config['date'] ?? '';
-                                if ($customDate === $fullDateStr) {
-                                    $isActiveOnThisDay = true;
-                                }
-                            }
+        if ($sch->routine_type === 'Harian') {
+            $days = $config['days'] ?? [];
+            if (empty($days) || in_array($dayNameId, $days)) {
+                $isActiveOnThisDay = true;
+            }
+        } elseif ($sch->routine_type === 'Mingguan') {
+            $days = $config['days'] ?? [];
+            $weeks = $config['weeks'] ?? [];
+            if (in_array($dayNameId, $days) && (in_array($wStr, $weeks) || in_array('Tiap Minggu', $weeks))) {
+                $isActiveOnThisDay = true;
+            }
+        } elseif ($sch->routine_type === 'Bulanan') {
+            $months = $config['months'] ?? [];
+            $weeks = $config['weeks'] ?? [];
+            if (in_array($monthNameShort, $months) && in_array($wStrShort, $weeks)) {
+                $isActiveOnThisDay = true;
+            }
+        } elseif ($sch->routine_type === 'Custom') {
+            $customDate = $config['date'] ?? '';
+            if ($customDate === $fullDateStr) {
+                $isActiveOnThisDay = true;
+            }
+        }
 
-                            if ($isActiveOnThisDay) {
-                                $schColor = $config['color'] ?? null;
-                                if ($schColor) {
-                                    $dayDots[] = $schColor;
-                                } else {
-                                    if ($sch->routine_type === 'Harian') {
-                                        $dayDots[] = 'green';
-                                    } elseif ($sch->routine_type === 'Mingguan') {
-                                        $dayDots[] = 'purple';
-                                    } elseif ($sch->routine_type === 'Bulanan') {
-                                        $dayDots[] = 'blue';
-                                    } else {
-                                        $dayDots[] = 'white';
-                                    }
-                                }
-                            }
-                        }
-                        $dayDots = array_slice(array_unique($dayDots), 0, 4);
+        if ($isActiveOnThisDay) {
+            $schColor = $config['color'] ?? null;
+            if ($schColor) {
+                $dayDots[] = $schColor;
+            } else {
+                if ($sch->routine_type === 'Harian') {
+                    $dayDots[] = 'green';
+                } elseif ($sch->routine_type === 'Mingguan') {
+                    $dayDots[] = 'purple';
+                } elseif ($sch->routine_type === 'Bulanan') {
+                    $dayDots[] = 'blue';
+                } else {
+                    $dayDots[] = 'white';
+                }
+            }
+        }
+    }
+    $dayDots = array_slice(array_unique($dayDots), 0, 4);
                     @endphp
 
                     @if ($isActiveCard)
@@ -1821,11 +1830,11 @@
                             <div class="schedule-slider" id="scheduleSlider">
                                 @forelse ($classifiedTodaySchedules as $cs)
                                     @php
-                                        $sch = $cs['model'];
-                                        $status = $cs['status'];
-                                        $statusLabel = $cs['status_label'];
-                                        $statusDot = $cs['status_dot'];
-                                        $durationStr = $cs['duration_str'];
+    $sch = $cs['model'];
+    $status = $cs['status'];
+    $statusLabel = $cs['status_label'];
+    $statusDot = $cs['status_dot'];
+    $durationStr = $cs['duration_str'];
                                     @endphp
                                     <div class="schedule-slide" data-status="{{ $status }}" data-start="{{ $cs['start'] }}"
                                         data-end="{{ $cs['end'] }}">
@@ -1877,10 +1886,10 @@
                     <div class="schedule-list" id="scheduleList">
                         @forelse ($classifiedTodaySchedules as $cs)
                             @php
-                                $sch = $cs['model'];
-                                $status = $cs['status'];
-                                $statusLabel = $cs['status_label'];
-                                $statusDot = $cs['status_dot'];
+    $sch = $cs['model'];
+    $status = $cs['status'];
+    $statusLabel = $cs['status_label'];
+    $statusDot = $cs['status_dot'];
                             @endphp
                             <div class="schedule-item">
                                 <div class="schedule-item-left">
@@ -2044,77 +2053,79 @@
             <div class="leaderboard-list">
 
                 @foreach($leaderboard as $index => $lbUser)
-                    @php
-                        $rankClass = '';
-                        if ($index === 0)
-                            $rankClass = 'rank-1';
-                        elseif ($index === 1)
-                            $rankClass = 'rank-2';
-                        elseif ($index === 2)
-                            $rankClass = 'rank-3';
-                    @endphp
-                    <!-- Rank {{ $index + 1 }} -->
-                    <div class="leaderboard-item {{ $rankClass }} {{ auth()->id() == $lbUser->id ? 'active-user' : '' }}">
-                        <div class="lb-rank">
-                            <span class="rank-num">{{ sprintf('%02d', $index + 1) }}</span>
-                        </div>
-                        <div class="lb-card">
-                            <div class="lb-avatar"
-                                style="background: url('https://ui-avatars.com/api/?name={{ urlencode($lbUser->name) }}&background=random') center/cover;">
-                            </div>
-                            <div class="lb-info">
-                                <div class="lb-name">{{ $lbUser->name }}
-                                    {!! $lbUser->exp >= 1000000 ? '<span class="tag-max">MAX</span>' : '' !!}
-                                </div>
-                                <div class="lb-role"><span
-                                        class="{{ auth()->id() == $lbUser->id ? 'user-tier-display' : '' }}">{{ $lbUser->tier }}</span>
-                                </div>
-                            </div>
-                            <x-user-achievements :user="$lbUser" />
-                            <div class="lb-exp"><span
-                                    class="{{ auth()->id() == $lbUser->id ? 'user-exp-display' : '' }}">{{ number_format($lbUser->exp, 0, ',', '.') }}</span>
-                                <span>EXP</span>
-                            </div>
-                            @if(auth()->id() == $lbUser->id)
-                                <div class="you-text">Me</div>
-                            @endif
-                        </div>
-                        @if(auth()->id() != $lbUser->id)
-                            @php
-                                $friendStatus = auth()->user()->friendshipStatusWith($lbUser);
-                                $btnClass = '';
-                                $btnText = '+ Tambah';
-                                if ($friendStatus === 'friends') {
-                                    $btnClass = 'friends';
-                                    $btnText = 'Teman';
-                                } elseif ($friendStatus === 'pending_sent') {
-                                    $btnClass = 'pending-sent';
-                                    $btnText = 'Pending';
-                                } elseif ($friendStatus === 'pending_received') {
-                                    $btnClass = 'pending-received';
-                                    $btnText = 'Terima';
-                                }
-                            @endphp
-                            <div class="lb-action toggle-friend-btn {{ $btnClass }}" data-id="{{ $lbUser->id }}">
-                                {{ $btnText }}
-                            </div>
-                        @endif
-                    </div>
+                                    @php
+                    $rankClass = '';
+                    if ($index === 0)
+                        $rankClass = 'rank-1';
+                    elseif ($index === 1)
+                        $rankClass = 'rank-2';
+                    elseif ($index === 2)
+                        $rankClass = 'rank-3';
+                                    @endphp
+                                    <!-- Rank {{ $index + 1 }} -->
+                                    <div class="leaderboard-item {{ $rankClass }} {{ auth()->id() == $lbUser->id ? 'active-user' : '' }}">
+                                        <div class="lb-rank">
+                                            <span class="rank-num">{{ sprintf('%02d', $index + 1) }}</span>
+                                        </div>
+                                        <div class="lb-card">
+                                            <div class="lb-left">
+                                                <div class="lb-avatar"
+                                                    style="background: url('https://ui-avatars.com/api/?name={{ urlencode($lbUser->name) }}&background=random') center/cover;">
+                                                </div>
+                                                <div class="lb-info">
+                                                    <div class="lb-name">{{ $lbUser->name }}
+                                                        {!! $lbUser->exp >= 1000000 ? '<span class="tag-max">MAX</span>' : '' !!}
+                                                    </div>
+                                                    <div class="lb-role"><span
+                                                            class="{{ auth()->id() == $lbUser->id ? 'user-tier-display' : '' }}">{{ $lbUser->tier }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <x-user-achievements :user="$lbUser" />
+                                            <div class="lb-exp"><span
+                                                    class="{{ auth()->id() == $lbUser->id ? 'user-exp-display' : '' }}">{{ number_format($lbUser->exp, 0, ',', '.') }}</span>
+                                                <span>EXP</span>
+                                            </div>
+                                            @if(auth()->id() == $lbUser->id)
+                                                <div class="you-text">Me</div>
+                                            @endif
+                                        </div>
+                                        @if(auth()->id() != $lbUser->id)
+                                            @php
+                        $friendStatus = auth()->user()->friendshipStatusWith($lbUser);
+                        $btnClass = '';
+                        $btnText = '+ Tambah';
+                        if ($friendStatus === 'friends') {
+                            $btnClass = 'friends';
+                            $btnText = 'Teman';
+                        } elseif ($friendStatus === 'pending_sent') {
+                            $btnClass = 'pending-sent';
+                            $btnText = 'Pending';
+                        } elseif ($friendStatus === 'pending_received') {
+                            $btnClass = 'pending-received';
+                            $btnText = 'Terima';
+                        }
+                                            @endphp
+                                            <div class="lb-action toggle-friend-btn {{ $btnClass }}" data-id="{{ $lbUser->id }}">
+                                                {{ $btnText }}
+                                            </div>
+                                        @endif
+                                    </div>
                 @endforeach
             </div>
 
             <!-- Current User Card (Fixed below scroll area) -->
             @php
-                $currentUser = auth()->user();
-                $foundIndex = $leaderboard->search(function ($user) use ($currentUser) {
-                    return $user->id == $currentUser->id;
-                });
+$currentUser = auth()->user();
+$foundIndex = $leaderboard->search(function ($user) use ($currentUser) {
+    return $user->id == $currentUser->id;
+});
 
-                if ($foundIndex !== false) {
-                    $currentUserRank = $foundIndex + 1;
-                } else {
-                    $currentUserRank = \App\Models\User::where('exp', '>', $currentUser->exp)->count() + 1;
-                }
+if ($foundIndex !== false) {
+    $currentUserRank = $foundIndex + 1;
+} else {
+    $currentUserRank = \App\Models\User::where('exp', '>', $currentUser->exp)->count() + 1;
+}
             @endphp
             <div class="leaderboard-item active-user current-user-lb-card" style="margin-top: 1rem;">
                 <div class="lb-rank" style="background: #312b36;">

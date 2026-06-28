@@ -19,42 +19,63 @@
     -moz-user-select: none;
     -ms-user-select: none;
     box-sizing: border-box;
+    outline: none;
 }
 
 *::-webkit-scrollbar {
     display: none;
 }
 
+*:focus,
+*:focus-visible {
+    outline: none !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus {
+    outline: none !important;
+    border-color: inherit;
+    box-shadow: none;
+}
+
+body.no-scroll {
+    overflow: hidden !important;
+}
+
 @keyframes slideDown {
     from {
         opacity: 0;
-        transform: translateY(-12px);
+        transform: translate3d(0, -12px, 0);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate3d(0, 0, 0);
     }
 }
 
 @keyframes slideUp {
     from {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate3d(0, 0, 0);
     }
 
     to {
         opacity: 0;
-        transform: translateY(-12px);
+        transform: translate3d(0, -12px, 0);
     }
 }
 
 .panel-show {
-    animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: slideDown 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    will-change: transform, opacity;
 }
 
 .panel-hide {
-    animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: slideUp 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    will-change: transform, opacity;
 }
 
 html {
@@ -176,9 +197,9 @@ body.dashboard-page::-webkit-scrollbar {
     position: fixed;
     inset: 0;
     z-index: 999;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -187,7 +208,9 @@ body.dashboard-page::-webkit-scrollbar {
     padding-right: 2rem;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.4s ease, visibility 0.4s ease;
+    transition: opacity 0.32s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, visibility;
+    contain: layout style;
 }
 
 .panel-overlay.open {
@@ -202,13 +225,16 @@ body.dashboard-page::-webkit-scrollbar {
     justify-content: flex-end;
     gap: 1.5rem;
     align-items: start;
-    /* Start positioned above the screen for a full slide-down effect */
-    transform: translateY(-100vh);
-    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* Slide down from above with GPU-accelerated transform and smooth bounce */
+    transform: translate3d(0, -45px, 0);
+    opacity: 0;
+    transition: transform 0.52s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease-out;
+    will-change: transform, opacity;
 }
 
 .panel-overlay.open .panel-content {
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
 }
 
 /* ---- Left: Notifications ---- */
@@ -281,15 +307,16 @@ body.dashboard-page::-webkit-scrollbar {
     position: fixed;
     inset: 0;
     z-index: 99999;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 2rem;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .notif-confirm-overlay.active {
@@ -298,70 +325,64 @@ body.dashboard-page::-webkit-scrollbar {
 }
 
 .notif-confirm-box {
-    background: #1e1c24;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 24px;
-    padding: 2.25rem 2.5rem;
-    width: 92%;
-    max-width: 360px;
-    text-align: center;
+    background: rgba(30, 28, 34, 0.85);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 28px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 450px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    transform: scale(0.85);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+    gap: 0.5rem;
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
 .notif-confirm-overlay.active .notif-confirm-box {
-    transform: scale(1);
+    transform: scale(1) translateY(0);
 }
 
-.notif-confirm-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
-    background: rgba(239, 68, 68, 0.1);
+.notif-confirm-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    margin-bottom: 0.25rem;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    text-align: left;
 }
 
-.notif-confirm-icon i {
-    font-size: 1.6rem;
+.notif-confirm-header i {
     color: #ef4444;
+    font-size: 1.8rem;
 }
 
 .notif-confirm-title {
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 800;
-    color: #ffffff;
-    letter-spacing: -0.01em;
+    color: white;
 }
 
 .notif-confirm-desc {
-    font-size: 0.82rem;
-    color: #71717a;
-    line-height: 1.55;
-    max-width: 280px;
+    font-size: 0.88rem;
+    color: #8b8591;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+    text-align: left;
 }
 
 .notif-confirm-actions {
     display: flex;
-    align-items: center;
+    justify-content: flex-end;
     gap: 0.75rem;
-    margin-top: 0.75rem;
+    margin-top: 0.5rem;
     width: 100%;
 }
 
 .notif-confirm-btn {
-    flex: 1;
-    padding: 0.75rem 1.25rem;
-    border-radius: 14px;
-    font-size: 0.85rem;
-    font-weight: 700;
+    padding: 0.7rem 1.25rem;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-weight: 600;
     cursor: pointer;
     border: none;
     transition: all 0.2s ease;
@@ -372,26 +393,26 @@ body.dashboard-page::-webkit-scrollbar {
 }
 
 .notif-confirm-cancel {
-    background: rgba(255, 255, 255, 0.06);
-    color: #a1a1aa;
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: white;
 }
 
 .notif-confirm-cancel:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: white;
 }
 
 .notif-confirm-delete {
-    background: #ef4444;
-    color: #ffffff;
-    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
 }
 
 .notif-confirm-delete:hover {
-    background: #dc2626;
-    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
 }
 
 .panel-notif-list {
@@ -414,7 +435,7 @@ body.dashboard-page::-webkit-scrollbar {
     align-items: center;
     gap: 1.25rem;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     border: 1px solid rgba(255, 255, 255, 0.015);
     position: relative;
     overflow: hidden;
@@ -444,6 +465,7 @@ body.dashboard-page::-webkit-scrollbar {
 .panel-notif-item:not(.unread):hover {
     background: #1a191e !important;
     opacity: 0.85;
+    transform: translateY(-1.5px);
 }
 
 
@@ -531,6 +553,7 @@ body.dashboard-page::-webkit-scrollbar {
     flex-direction: column;
     gap: 0.85rem;
     width: 100%;
+    transform: translateZ(0);
 }
 
 /* Volume row: pill + thin track */
@@ -574,6 +597,11 @@ body.dashboard-page::-webkit-scrollbar {
     stroke-linecap: round;
     stroke-linejoin: round;
     flex-shrink: 0;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.panel-volume-row:hover .panel-volume-fill svg {
+    transform: scale(1.15);
 }
 
 .panel-volume-input {
@@ -596,6 +624,41 @@ body.dashboard-page::-webkit-scrollbar {
     flex-direction: column;
     gap: 1.5rem;
     width: 100%;
+    /* closing (restore) transition — gentle ease-in */
+    transition: gap 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+        padding 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.panel-music.minimized {
+    gap: 0;
+    /* opening (minimize) transition — snappy ease-out */
+    transition: gap 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.panel-music .music-visualizer,
+.panel-music .music-controls {
+    /* closing (restore) transition — slower, graceful */
+    transition: max-height 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.5s ease-in,
+        margin 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+        overflow 0s 0.55s;
+    max-height: 200px;
+    opacity: 1;
+    overflow: visible;
+}
+
+.panel-music.minimized .music-visualizer,
+.panel-music.minimized .music-controls {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    overflow: hidden;
+    /* opening (minimize) transition — snappy */
+    transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.3s ease-out,
+        margin 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        overflow 0s;
 }
 
 .music-header {
@@ -685,12 +748,201 @@ body.dashboard-page::-webkit-scrollbar {
 }
 
 .music-play-btn {
-    background: transparent;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.25s ease;
+}
+
+.music-play-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: scale(1.08);
+}
+
+.music-play-btn:active {
+    transform: scale(0.94);
+}
+
+
+/* YouTube Music Player Integration */
+.music-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.music-action-btn {
+    background: none;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    opacity: 0.65;
+    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+    padding: 4px;
+    border-radius: 6px;
+}
+
+.music-action-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: #ffffff;
+    transition: fill 0.25s ease, filter 0.25s ease;
+}
+
+.music-action-btn:hover {
+    opacity: 1;
+    transform: scale(1.12);
+}
+
+.music-action-btn:hover svg {
+    fill: #ff3333;
+}
+
+.music-action-btn.active {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.music-action-btn.active svg {
+    fill: #ff0000;
+    filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.6));
+}
+
+.music-yt-input-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding: 0 1.25rem;
+    transform: translateY(-8px) scale(0.97);
+    /* closing transition — slower, graceful ease-in */
+    transition: max-height 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.45s ease-in,
+        transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+        padding 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+        margin-top 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    margin-top: -1.5rem;
+    background: #111013b0;
+    border-radius: 28px;
+}
+
+.music-yt-input-container.active {
+    max-height: 80px;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    padding: 0.85rem 1.25rem;
+    margin-top: 0;
+    pointer-events: auto;
+    /* opening transition — snappy ease-out */
+    transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.35s ease-out,
+        transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        padding 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        margin-top 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.music-yt-input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: rgba(21, 20, 25, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 50px;
+    padding: 0.45rem 0.6rem 0.45rem 1.1rem;
+    gap: 0.6rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05),
+        0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.music-yt-input-wrapper:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(21, 20, 25, 0.65);
+}
+
+.music-yt-input-wrapper:focus-within {
+    border-color: rgba(255, 0, 0, 0.55);
+    background: rgba(21, 20, 25, 0.85);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05),
+        0 0 14px rgba(255, 0, 0, 0.25),
+        0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.music-yt-input-wrapper svg {
+    width: 18px;
+    height: 18px;
+    fill: rgba(255, 255, 255, 0.45);
+    flex-shrink: 0;
+    transition: fill 0.3s ease, transform 0.3s ease;
+}
+
+.music-yt-input-wrapper:focus-within svg {
+    fill: #ff0000;
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 3px rgba(255, 0, 0, 0.5));
+}
+
+.music-yt-input-wrapper input {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 0.85rem;
+    width: 100%;
+    outline: none;
+    font-weight: 400;
+}
+
+.music-yt-input-wrapper input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+    transition: color 0.3s ease;
+}
+
+.music-yt-input-wrapper input:focus::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.music-yt-btn {
+    background: linear-gradient(135deg, #ff0000, #c40000);
+    color: #ffffff;
+    border: none;
+    border-radius: 50px;
+    padding: 0.45rem 1.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.2);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.music-yt-btn:hover {
+    background: linear-gradient(135deg, #ff1a1a, #d90000);
+    transform: translateY(-1.5px) scale(1.03);
+    box-shadow: 0 6px 16px rgba(255, 0, 0, 0.35);
+}
+
+.music-yt-btn:active {
+    transform: translateY(0.5px) scale(0.96);
+    box-shadow: 0 2px 8px rgba(255, 0, 0, 0.25);
 }
 
 /* Friend Panel */
@@ -698,7 +950,7 @@ body.dashboard-page::-webkit-scrollbar {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideDown 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     position: relative;
 }
 
@@ -829,7 +1081,7 @@ body.dashboard-page::-webkit-scrollbar {
     border: 1.5px solid rgba(234, 88, 12, 0.15);
     border-radius: 16px;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
 }
@@ -1129,7 +1381,7 @@ body.dashboard-page::-webkit-scrollbar {
     display: flex;
     flex-direction: column;
     gap: 1.2rem;
-    animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideDown 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     background: #151419c0;
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 24px;
@@ -1267,7 +1519,7 @@ body.dashboard-page::-webkit-scrollbar {
     /* Firefox */
     -ms-overflow-style: none;
     /* IE/Edge */
-    animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideDown 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     background: #151419c0;
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 24px;
@@ -1550,7 +1802,7 @@ body.dashboard-page::-webkit-scrollbar {
     overflow: hidden;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 100;
 }
 
@@ -1568,7 +1820,7 @@ body.dashboard-page::-webkit-scrollbar {
     position: relative;
     width: 100%;
     height: 380px;
-    transition: height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: height 0.38s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
 }
 
@@ -1625,7 +1877,7 @@ body.dashboard-page::-webkit-scrollbar {
     display: flex;
     flex-direction: column;
     gap: 1.2rem;
-    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s;
+    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
 }
 
 /* Slide positions */
@@ -1720,11 +1972,19 @@ body.dashboard-page::-webkit-scrollbar {
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
-    transition: 0.2s;
+    transition: background 0.25s ease, transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 0.5rem;
+}
+
+.bug-btn:hover {
+    transform: scale(1.03);
+}
+
+.bug-btn:active {
+    transform: scale(0.97);
 }
 
 .bug-btn-primary {
@@ -1941,6 +2201,10 @@ body.dashboard-page::-webkit-scrollbar {
     gap: 1rem;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0);
+    padding: 0.5rem;
+    margin: -0.5rem;
 }
 
 .panel-grid::-webkit-scrollbar {
@@ -1965,13 +2229,19 @@ body.dashboard-page::-webkit-scrollbar {
     align-items: center;
     gap: 1rem;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.25s ease, transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
     text-align: left;
     min-height: 100px;
 }
 
 .panel-grid-btn:hover {
     background: #2e2c34;
+    transform: scale(1.03);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.panel-grid-btn:active {
+    transform: scale(0.97);
 }
 
 .panel-grid-btn.active {
@@ -2040,7 +2310,7 @@ body.dashboard-page::-webkit-scrollbar {
     height: 10px;
     border-radius: 10px;
     background: #3f3d46;
-    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: background 0.3s ease, width 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
     cursor: pointer;
 }
 
@@ -2068,7 +2338,7 @@ body.dashboard-page::-webkit-scrollbar {
 .hero-card {
     border-radius: var(--radius-lg);
     position: relative;
-    min-height: 450px;
+    min-height: 495px;
     overflow: hidden;
     touch-action: pan-x;
 }
@@ -2648,10 +2918,11 @@ body.dashboard-page::-webkit-scrollbar {
 .mission-icon {
     width: 24px;
     height: 24px;
-    border: 2px solid white;
-    border-radius: 4px;
+    border: 2px solid #3a3440;
+    border-radius: 10px;
     display: flex;
     align-items: center;
+    background: #0a0a0a;
     justify-content: center;
     color: transparent;
     font-size: 1.1rem;
@@ -3532,9 +3803,18 @@ body.dashboard-page::-webkit-scrollbar {
     padding: 0 2rem 0 0.6rem;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 1.5rem;
     border: none;
     box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+}
+
+.lb-left {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: 23em;
 }
 
 .lb-card .lb-exp {
@@ -3705,14 +3985,13 @@ body.dashboard-page::-webkit-scrollbar {
 
 .you-text {
     width: 140px;
+    height: 80px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.3rem;
     font-weight: 500;
     color: white;
-    margin-right: -1rem;
-    /* Offset some right padding to align with buttons below */
 }
 
 /* --- BOTTOM-LEFT PAGE NAV --- */
@@ -5649,6 +5928,54 @@ body.dashboard-page::-webkit-scrollbar {
     justify-content: center;
     gap: 0.75rem;
     height: 100%;
+}
+
+.friend-hub-empty i {
+    font-size: 2.5rem;
+    color: rgba(255, 255, 255, 0.05);
+}
+
+.friend-hub-empty span {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #8e8c94;
+}
+
+.friend-hub-empty p {
+    font-size: 0.78rem;
+    color: #615f66;
+    max-width: 250px;
+    margin: 0 auto;
+}
+
+.friend-expand-btn:hover {
+    color: #ea580c !important;
+    border-color: rgba(234, 88, 12, 0.3) !important;
+    background: rgba(234, 88, 12, 0.05) !important;
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(234, 88, 12, 0.15);
+}
+
+/* Responsive adjustment */
+@media (max-width: 768px) {
+    .friend-hub-glass {
+        height: 90vh;
+        max-height: none;
+    }
+
+    .friend-hub-body {
+        flex-direction: column;
+    }
+
+    .friend-hub-left {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        flex: 1;
+    }
+
+    .friend-hub-right {
+        flex: 1;
+    }
 }
 
 .friend-hub-empty i {

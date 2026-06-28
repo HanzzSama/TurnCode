@@ -201,13 +201,20 @@
                 <div class="panel-music" id="panelMusic" style="display: none;">
                     <div class="music-header">
                         <div class="music-title">Music Player</div>
-                        <label for="musicUpload" class="music-upload-btn">
-                            <svg viewBox="0 0 24 24">
-                                <line x1="12" y1="5" x2="12" y2="19" />
-                                <line x1="5" y1="12" x2="19" y2="12" />
-                            </svg>
-                        </label>
-                        <input type="file" id="musicUpload" accept="audio/*" style="display: none;">
+                        <div class="music-actions">
+                            <button id="musicYtToggleBtn" class="music-action-btn" title="YouTube Link">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M23.498 6.163c-.272-1.017-1.074-1.819-2.091-2.091C19.56 3.53 12 3.53 12 3.53s-7.56 0-9.407.542C1.576 4.344.774 5.146.502 6.163.0 8.01.0 12 .0 12s0 3.99.502 5.837c.272 1.017 1.074 1.819 2.091 2.091 1.847.542 9.407.542 9.407.542s7.56 0 9.407-.542c1.017-.272 1.819-1.074 2.091-2.091.502-1.847.502-5.837.502-5.837s0-3.99-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                            </button>
+                            <label for="musicUpload" class="music-upload-btn" title="Upload Audio Lokal">
+                                <svg viewBox="0 0 24 24">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                            </label>
+                            <input type="file" id="musicUpload" accept="audio/*" style="display: none;">
+                        </div>
                     </div>
                     <div class="music-visualizer" id="musicVisualizer">
                         <div class="music-bar" style="--max: 20px;"></div>
@@ -234,6 +241,20 @@
                         </button>
                     </div>
                     <audio id="audioPlayer" style="display: none;"></audio>
+                    <div id="youtubePlayer" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;"></div>
+                </div>
+
+                <!-- YouTube Link Input Field (outside music container) -->
+                <div class="music-yt-input-container" id="musicYtInputContainer">
+                    <div class="music-yt-input-wrapper">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M23.498 6.163c-.272-1.017-1.074-1.819-2.091-2.091C19.56 3.53 12 3.53 12 3.53s-7.56 0-9.407.542C1.576 4.344.774 5.146.502 6.163.0 8.01.0 12 .0 12s0 3.99.502 5.837c.272 1.017 1.074 1.819 2.091 2.091 1.847.542 9.407.542 9.407.542s7.56 0 9.407-.542c1.017-.272 1.819-1.074 2.091-2.091.502-1.847.502-5.837.502-5.837s0-3.99-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                        <input type="text" id="musicYtInput" placeholder="Masukkan link YouTube...">
+                    </div>
+                    <button id="musicYtSubmit" class="music-yt-btn">
+                        Play
+                    </button>
                 </div>
 
                 <!-- Friend Search Component -->
@@ -734,17 +755,14 @@
 <!-- Custom Confirm Popup for Delete All Notifications -->
 <div class="notif-confirm-overlay" id="notifConfirmOverlay">
     <div class="notif-confirm-box">
-        <div class="notif-confirm-icon">
+        <div class="notif-confirm-header">
             <i class='bx bx-trash'></i>
+            <div class="notif-confirm-title">Hapus Semua Notifikasi?</div>
         </div>
-        <div class="notif-confirm-title">Hapus Semua Notifikasi?</div>
         <div class="notif-confirm-desc">Semua notifikasi akan dihapus secara permanen dan tidak dapat dikembalikan.</div>
         <div class="notif-confirm-actions">
             <button class="notif-confirm-btn notif-confirm-cancel" id="notifConfirmCancel">Batal</button>
-            <button class="notif-confirm-btn notif-confirm-delete" id="notifConfirmDelete">
-                <i class='bx bx-trash' style="font-size: 1rem;"></i>
-                Hapus Semua
-            </button>
+            <button class="notif-confirm-btn notif-confirm-delete" id="notifConfirmDelete">Hapus Semua</button>
         </div>
     </div>
 </div>

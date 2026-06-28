@@ -1313,6 +1313,24 @@
             gap: 4rem;
         }
 
+        .dev-bg-text {
+            position: absolute;
+            font-family: 'Silkscreen', sans-serif;
+            font-size: 12vw;
+            font-weight: 900;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.02);
+            bottom: 2%;
+            right: 2%;
+            z-index: 0;
+            pointer-events: none;
+            user-select: none;
+            transform: translateY(var(--parallax-y, 0px));
+            transition: transform 0.1s ease-out;
+            line-height: 1;
+        }
+
+
         .dev-header {
             display: grid;
             grid-template-columns: 1.2fr 1fr;
@@ -1345,6 +1363,12 @@
         .dev-cards-wrapper {
             width: 100%;
             overflow: hidden;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .dev-cards-wrapper:active {
+            cursor: grabbing;
         }
 
         .dev-cards-track {
@@ -1352,6 +1376,7 @@
             gap: 1.5rem;
             transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             width: 100%;
+            will-change: transform;
         }
 
         .dev-card {
@@ -1366,24 +1391,30 @@
             border-radius: 24px;
             overflow: hidden;
             aspect-ratio: 16 / 10;
-            background: #1e1b20;
+            background: #000;
             border: 1px solid rgba(255, 255, 255, 0.03);
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .dev-card-img {
-            width: 100%;
-            height: 100%;
+            position: absolute;
+            left: -10%;
+            top: -10%;
+            width: 120%;
+            height: 120%;
             object-fit: cover;
             opacity: 0.55;
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            /* background: #000; */
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             filter: grayscale(100%);
+            transform: scale(1.1) translateX(var(--img-parallax-x, 0px)) translateY(var(--img-parallax-y, 0px));
+            will-change: transform;
         }
 
         .dev-card.active .dev-card-img {
             opacity: 1;
             filter: none;
-            transform: scale(1.02);
+            transform: scale(1.15) translateX(var(--img-parallax-x, 0px)) translateY(var(--img-parallax-y, 0px));
         }
 
         .dev-card.active .dev-card-img-wrapper {
@@ -2097,7 +2128,13 @@
             </section>
 
             <!-- DEVELOPER SECTION -->
-            <section class="dev-section">
+            <section class="dev-section" style="position: relative;">
+                <!-- Decorative Parallax Elements Wrapper to prevent overflow clipping -->
+                <div class="dev-bg-parallax-wrapper"
+                    style="position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0;">
+                    <div class="dev-bg-text" data-parallax-speed="-0.15">TurnCode</div>
+                </div>
+
                 <!-- Header: Two columns -->
                 <div class="dev-header">
                     <h2 class="dev-header-title reveal reveal-slide-left dev-header-left">Developer TurnCode<br>Generasi
@@ -2267,7 +2304,11 @@
                             entry.target.classList.contains('hero-desc') ||
                             entry.target.classList.contains('hero-buttons');
 
+                        const isAbout = entry.target.classList.contains('about-split-left') ||
+                            entry.target.classList.contains('about-split-right');
 
+                        const isDevHeader = entry.target.classList.contains('dev-header-left') ||
+                            entry.target.classList.contains('dev-header-right');
 
                         if (entry.target.hasAttribute('data-scroll-scale')) {
                             setTimeout(() => {
@@ -2277,7 +2318,7 @@
                             setTimeout(() => {
                                 entry.target.classList.add('sync-active');
                             }, 1000);
-                        } else if (isAbout) {
+                        } else if (isAbout || isDevHeader) {
                             setTimeout(() => {
                                 entry.target.classList.add('sync-active');
                             }, 1000);
@@ -2297,6 +2338,7 @@
             const parallaxElements = document.querySelectorAll('[data-parallax-speed]');
             const careerCards = document.querySelectorAll('.career-card');
             const scaleElements = document.querySelectorAll('[data-scroll-scale]');
+            const devCards = document.querySelectorAll('.dev-card');
 
             const heroPreTitle = document.querySelector('.hero-pre-title');
             const heroMainTitle = document.querySelector('.hero-main-title');
@@ -2420,6 +2462,26 @@
                             devHeaderRight.style.setProperty('--dev-header-opacity', '0.5');
                         }
                     }
+                }
+
+                // Update developer card images vertical parallax
+                if (devCards && devCards.length > 0) {
+                    devCards.forEach(card => {
+                        const rect = card.getBoundingClientRect();
+                        if (rect.top < viewportHeight && rect.bottom > 0) {
+                            const cardHeight = rect.height;
+                            const cardCenter = rect.top + cardHeight / 2;
+                            const offsetFromCenter = cardCenter - viewportCenter;
+
+                            const speed = 0.08;
+                            const translateY = offsetFromCenter * speed;
+
+                            const img = card.querySelector('.dev-card-img');
+                            if (img) {
+                                img.style.setProperty('--img-parallax-y', `${translateY}px`);
+                            }
+                        }
+                    });
                 }
 
                 // Update standard parallax elements
@@ -2558,11 +2620,31 @@
             ];
 
             let activeDevIndex = 0;
-            const devCards = document.querySelectorAll('.dev-card');
             const devCardsTrack = document.getElementById('devCardsTrack');
             const devTitle = document.getElementById('devTitle');
             const devDesc = document.getElementById('devDesc');
             const devLink = document.getElementById('devLink');
+
+            function updateImagesParallax(currentShift) {
+                if (!devCards || devCards.length === 0) return;
+                const cardWidth = devCards[0].offsetWidth;
+                const gap = 24; // 1.5rem gap matches CSS
+                const visibleCards = window.innerWidth <= 768 ? 1 : 3;
+                const carouselCenter = ((visibleCards - 1) / 2) * (cardWidth + gap);
+
+                devCards.forEach((card, idx) => {
+                    const img = card.querySelector('.dev-card-img');
+                    if (img) {
+                        const cardLeftInCarousel = (idx * (cardWidth + gap)) + currentShift;
+                        const distFromCenter = cardLeftInCarousel - carouselCenter;
+                        const maxDist = 2 * (cardWidth + gap);
+                        const factor = distFromCenter / (maxDist || 1);
+                        const maxDisplacement = 40;
+                        const parallaxOffset = -factor * maxDisplacement;
+                        img.style.setProperty('--img-parallax-x', `${parallaxOffset}px`);
+                    }
+                });
+            }
 
             window.selectDeveloper = function (index) {
                 activeDevIndex = index;
@@ -2593,6 +2675,7 @@
                     targetShift = Math.min(maxShift, Math.max(targetShift, minShift));
 
                     devCardsTrack.style.transform = `translateX(${targetShift}px)`;
+                    updateImagesParallax(targetShift);
                 }
             };
 
@@ -2609,6 +2692,110 @@
             window.addEventListener('resize', () => {
                 selectDeveloper(activeDevIndex);
             });
+
+            // --- Drag / Swipe Support for Developer Section Slider ---
+            const devCardsWrapper = document.querySelector('.dev-cards-wrapper');
+            let isDragging = false;
+            let startX = 0;
+            let baseTranslate = 0;
+            let dragTranslate = 0;
+            let hasDragged = false;
+
+            if (devCardsWrapper && devCardsTrack) {
+                // Prevent drag start on standard elements
+                devCardsTrack.addEventListener('dragstart', (e) => e.preventDefault());
+
+                const dragStart = (e) => {
+                    isDragging = true;
+                    hasDragged = false;
+                    startX = e.pageX || (e.touches && e.touches[0].pageX);
+
+                    // Disable transitions temporarily for immediate response
+                    devCardsTrack.style.transition = 'none';
+
+                    // Calculate current translate
+                    const cardWidth = devCards[0].offsetWidth;
+                    const gap = 24;
+                    const visibleCards = window.innerWidth <= 768 ? 1 : 3;
+                    const maxShift = 0;
+                    const minShift = - (developersData.length - visibleCards) * (cardWidth + gap);
+                    let targetShift = - (activeDevIndex - Math.floor(visibleCards / 2)) * (cardWidth + gap);
+                    baseTranslate = Math.min(maxShift, Math.max(targetShift, minShift));
+                };
+
+                const dragMove = (e) => {
+                    if (!isDragging) return;
+
+                    const x = e.pageX || (e.touches && e.touches[0].pageX);
+                    const deltaX = x - startX;
+
+                    if (Math.abs(deltaX) > 10) {
+                        hasDragged = true;
+                    }
+
+                    // Calculate bounds
+                    const cardWidth = devCards[0].offsetWidth;
+                    const gap = 24;
+                    const visibleCards = window.innerWidth <= 768 ? 1 : 3;
+                    const maxShift = 0;
+                    const minShift = - (developersData.length - visibleCards) * (cardWidth + gap);
+
+                    dragTranslate = baseTranslate + deltaX;
+
+                    // Add slight resistance outside bounds
+                    if (dragTranslate > maxShift) {
+                        dragTranslate = maxShift + (dragTranslate - maxShift) * 0.3;
+                    } else if (dragTranslate < minShift) {
+                        dragTranslate = minShift + (dragTranslate - minShift) * 0.3;
+                    }
+
+                    devCardsTrack.style.transform = `translateX(${dragTranslate}px)`;
+                    updateImagesParallax(dragTranslate);
+                };
+
+                const dragEnd = (e) => {
+                    if (!isDragging) return;
+                    isDragging = false;
+
+                    // Re-enable smooth transition
+                    devCardsTrack.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+
+                    const x = e.pageX || (e.changedTouches && e.changedTouches[0].pageX) || startX;
+                    const deltaX = x - startX;
+
+                    if (hasDragged && Math.abs(deltaX) > 40) {
+                        const cardWidth = devCards[0].offsetWidth;
+                        const gap = 24;
+                        const visibleCards = window.innerWidth <= 768 ? 1 : 3;
+
+                        let approxIndex = Math.round(- dragTranslate / (cardWidth + gap) + Math.floor(visibleCards / 2));
+                        approxIndex = Math.max(0, Math.min(developersData.length - 1, approxIndex));
+
+                        selectDeveloper(approxIndex);
+                    } else {
+                        // Snap back to current active card
+                        selectDeveloper(activeDevIndex);
+                    }
+                };
+
+                // Mouse Event Listeners
+                devCardsWrapper.addEventListener('mousedown', dragStart);
+                window.addEventListener('mousemove', dragMove);
+                window.addEventListener('mouseup', dragEnd);
+
+                // Touch Event Listeners (mobile)
+                devCardsWrapper.addEventListener('touchstart', dragStart, { passive: true });
+                window.addEventListener('touchmove', dragMove, { passive: true });
+                window.addEventListener('touchend', dragEnd);
+
+                // Intercept clicks if the user dragged
+                devCardsWrapper.addEventListener('click', (e) => {
+                    if (hasDragged) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }, true);
+            }
 
             // Initialize slider state
             selectDeveloper(0);

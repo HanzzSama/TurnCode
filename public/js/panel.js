@@ -1,9 +1,59 @@
 function initPanelJs() {
-    const menuPanel = document.getElementById('menuPanel');
-
     if (window.panelJsInitialized) return;
     window.panelJsInitialized = true;
 
+    // Helper to lock body scroll when overlay is active
+    function updateBodyScroll() {
+        const panel = document.getElementById('menuPanel');
+        const modal = document.getElementById('friendHubModal');
+        const isMenuOpen = panel && panel.classList.contains('open');
+        const isFriendHubOpen = modal && modal.classList.contains('show');
+        
+        if (isMenuOpen || isFriendHubOpen) {
+            if (document.body) document.body.classList.add('no-scroll');
+        } else {
+            if (document.body) document.body.classList.remove('no-scroll');
+        }
+    }
+
+    // Set initial state
+    updateBodyScroll();
+
+    // Listen to class changes on menuPanel
+    const targetMenuPanel = document.getElementById('menuPanel');
+    if (targetMenuPanel) {
+        const menuObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    updateBodyScroll();
+                }
+            });
+        });
+        menuObserver.observe(targetMenuPanel, { attributes: true });
+    }
+
+    // Listen to class changes on friendHubModal
+    const targetFriendHubModal = document.getElementById('friendHubModal');
+    if (targetFriendHubModal) {
+        const friendObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    updateBodyScroll();
+                }
+            });
+        });
+        friendObserver.observe(targetFriendHubModal, { attributes: true });
+    }
+
+    // YouTube Player State (declared early to prevent TDZ ReferenceError)
+    let ytPlayer = null;
+    let isYtReady = false;
+    let currentYtVideoId = null;
+    let pendingYtSeekTime = null;
+    let ytProgressInterval = null;
+    let ytVisualizerAnimationId = null;
+
+    const menuPanel = document.getElementById('menuPanel');
     if (menuPanel) {
         menuPanel.addEventListener('click', function (e) {
             // Tutup panel jika klik terjadi di luar area panel-notif, panel-right-col, dan bug-report-wrapper
@@ -43,6 +93,11 @@ function initPanelJs() {
         const audioPlayer = document.getElementById('audioPlayer');
         if (audioPlayer) {
             audioPlayer.volume = val / 100;
+        }
+
+        // Terhubung ke volume YouTube (0 hingga 100)
+        if (typeof ytPlayer !== 'undefined' && ytPlayer && typeof isYtReady !== 'undefined' && isYtReady) {
+            ytPlayer.setVolume(val);
         }
 
         // Simpan ke localStorage
@@ -359,8 +414,183 @@ function initPanelJs() {
     const musicProgressBar = document.getElementById('musicProgressBar');
     const musicProgressFill = document.getElementById('musicProgressFill');
 
+    // YouTube Integration Elements
+    const musicYtToggleBtn = document.getElementById('musicYtToggleBtn');
+    const musicYtInputContainer = document.getElementById('musicYtInputContainer');
+    const musicYtInput = document.getElementById('musicYtInput');
+    const musicYtSubmit = document.getElementById('musicYtSubmit');
+
     let audioCtx, analyser, dataArray, source;
     let animationId;
+    let activeSource = localStorage.getItem('musicActiveSource') || 'local'; // 'local' or 'youtube'
+
+
+
+    // Assign data-seed to music bars for the simulated visualizer
+    musicBars.forEach((bar, index) => {
+        bar.setAttribute('data-seed', (index * 1.5).toString());
+    });
+
+    // Load YouTube API dynamically
+    if (!window.YT) {
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+
+    const previousAPIReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = function() {
+        if (previousAPIReady) previousAPIReady();
+        initYoutubePlayer();
+    };
+
+    // If window.YT is already loaded
+    if (window.YT && window.YT.Player) {
+        initYoutubePlayer();
+    }
+
+    function initYoutubePlayer() {
+        if (ytPlayer) return;
+        ytPlayer = new YT.Player('youtubePlayer', {
+            height: '1',
+            width: '1',
+            videoId: '',
+            playerVars: {
+                'playsinline': 1,
+                'controls': 0,
+                'disablekb': 1,
+                'fs': 0,
+                'rel': 0
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+
+    function onPlayerReady(event) {
+        isYtReady = true;
+
+        // Set initial volume from slider
+        const savedVolume = localStorage.getItem('audioPlayerVolume');
+        if (savedVolume !== null && ytPlayer) {
+            ytPlayer.setVolume(parseInt(savedVolume));
+        }
+
+        if (activeSource === 'youtube') {
+            const savedUrl = localStorage.getItem('musicActiveYtUrl');
+            if (savedUrl) {
+                const videoId = getYouTubeId(savedUrl);
+                if (videoId) {
+                    ytPlayer.cueVideoById(videoId);
+                    const savedTime = localStorage.getItem('musicProgressYt');
+                    if (savedTime && parseFloat(savedTime) > 0) {
+                        pendingYtSeekTime = parseFloat(savedTime);
+                    }
+                }
+            }
+        }
+    }
+
+    function onPlayerStateChange(event) {
+        // YT.PlayerState.PLAYING is 1, PAUSED is 2, ENDED is 0
+        if (event.data === 1) {
+            iconPlay.style.display = 'none';
+            iconPause.style.display = 'block';
+            
+            if (pendingYtSeekTime !== null) {
+                ytPlayer.seekTo(pendingYtSeekTime, true);
+                pendingYtSeekTime = null;
+            }
+            
+            animateYtVisualizer();
+            if (ytProgressInterval) clearInterval(ytProgressInterval);
+            ytProgressInterval = setInterval(updateYtProgress, 500);
+        } else {
+            if (event.data === 2 || event.data === 0) {
+                iconPlay.style.display = 'block';
+                iconPause.style.display = 'none';
+                resetVisualizer();
+                if (ytProgressInterval) clearInterval(ytProgressInterval);
+            }
+            if (event.data === 0) {
+                musicProgressFill.style.width = '0%';
+                localStorage.setItem('musicProgressYt', 0);
+            }
+        }
+    }
+
+    function updateYtProgress() {
+        if (!ytPlayer || !isYtReady || activeSource !== 'youtube') return;
+        const duration = ytPlayer.getDuration();
+        const currentTime = ytPlayer.getCurrentTime();
+        if (duration > 0) {
+            const pct = (currentTime / duration) * 100;
+            musicProgressFill.style.width = pct + '%';
+            localStorage.setItem('musicProgressYt', currentTime);
+        }
+    }
+
+    function getYouTubeId(url) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    function playYoutubeLink() {
+        const url = musicYtInput.value.trim();
+        if (!url) return;
+        const videoId = getYouTubeId(url);
+        if (videoId) {
+            // Hentikan audio lokal jika sedang berjalan
+            if (!audioPlayer.paused) {
+                audioPlayer.pause();
+                resetVisualizer();
+            }
+
+            activeSource = 'youtube';
+            localStorage.setItem('musicActiveSource', 'youtube');
+            localStorage.setItem('musicActiveYtUrl', url);
+            localStorage.setItem('musicProgressYt', 0);
+
+            if (isYtReady && ytPlayer) {
+                ytPlayer.loadVideoById(videoId);
+            } else {
+                currentYtVideoId = videoId;
+                initYoutubePlayer();
+            }
+            musicYtInputContainer.classList.remove('active');
+            musicYtToggleBtn.classList.remove('active');
+            if (panelMusic) panelMusic.classList.remove('minimized');
+            musicYtInput.value = '';
+        } else {
+            alert('URL YouTube tidak valid. Harap masukkan tautan yang benar.');
+        }
+    }
+
+    if (musicYtToggleBtn && musicYtInputContainer) {
+        musicYtToggleBtn.addEventListener('click', function() {
+            const isActive = musicYtInputContainer.classList.toggle('active');
+            musicYtToggleBtn.classList.toggle('active', isActive);
+            if (panelMusic) panelMusic.classList.toggle('minimized', isActive);
+            if (isActive) {
+                musicYtInput.focus();
+            }
+        });
+    }
+
+    if (musicYtSubmit) {
+        musicYtSubmit.addEventListener('click', playYoutubeLink);
+    }
+    if (musicYtInput) {
+        musicYtInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                playYoutubeLink();
+            }
+        });
+    }
 
     function initAudio() {
         if (!audioCtx) {
@@ -370,12 +600,10 @@ function initPanelJs() {
             source.connect(analyser);
             analyser.connect(audioCtx.destination);
 
-            // Gunakan resolusi frekuensi yang lebih tinggi agar bisa memisahkan tiap instrumen
             analyser.fftSize = 512;
-            // Tingkatkan headroom agar frekuensi jarang mentok di atas (255)
             analyser.maxDecibels = -45;
             analyser.minDecibels = -100;
-            analyser.smoothingTimeConstant = 0.65; // Sedikit dilambatkan saat turun agar smooth
+            analyser.smoothingTimeConstant = 0.65;
 
             const bufferLength = analyser.frequencyBinCount;
             dataArray = new Uint8Array(bufferLength);
@@ -386,27 +614,20 @@ function initPanelJs() {
     }
 
     function animateVisualizer() {
-        if (audioPlayer.paused) return;
+        if (audioPlayer.paused || activeSource !== 'local') return;
         animationId = requestAnimationFrame(animateVisualizer);
         if (analyser && dataArray) {
             analyser.getByteFrequencyData(dataArray);
 
-            // Memetakan masing-masing bar ke rentang frekuensi (bin) yang spesifik dan berbeda
-            // Ujung (40): Hi-Hats (Tinggi)
-            // Tengah luar (15): Snare/Vokal atas (Menengah-tinggi)
-            // Tengah dalam (6): Gitar/Vokal bawah (Menengah)
-            // Pusat (2): Kick Drum/Punchy Bass (Rendah)
             const bins = [40, 15, 6, 2, 6, 15, 40];
 
             musicBars.forEach((bar, index) => {
                 const freqIndex = bins[index];
-                const data = dataArray[freqIndex] || 0; // nilai 0 - 255
+                const data = dataArray[freqIndex] || 0;
 
-                // Normalisasi dari 0 hingga 1
                 const normalized = data / 255;
                 const curve = Math.pow(normalized, 1.8);
 
-                // Tinggi dihitung secara proporsional antara 8px (dot) dan batas max masing-masing
                 const base = 8;
                 const max = parseInt(bar.style.getPropertyValue('--max')) || 20;
 
@@ -416,8 +637,26 @@ function initPanelJs() {
         }
     }
 
+    function animateYtVisualizer() {
+        if (activeSource !== 'youtube' || !ytPlayer || ytPlayer.getPlayerState() !== 1) {
+            return;
+        }
+        ytVisualizerAnimationId = requestAnimationFrame(animateYtVisualizer);
+        
+        musicBars.forEach((bar) => {
+            const max = parseInt(bar.style.getPropertyValue('--max')) || 20;
+            const base = 8;
+            const time = Date.now() * 0.005;
+            const seed = parseFloat(bar.getAttribute('data-seed') || '0');
+            const noise = Math.sin(time + seed) * 0.5 + 0.5;
+            const height = base + noise * (max - base);
+            bar.style.height = height + 'px';
+        });
+    }
+
     function resetVisualizer() {
         cancelAnimationFrame(animationId);
+        cancelAnimationFrame(ytVisualizerAnimationId);
         musicBars.forEach(bar => {
             bar.style.height = '20px';
         });
@@ -448,6 +687,24 @@ function initPanelJs() {
 
     function loadSavedMusic() {
         if (!db || !audioPlayer) return;
+
+        if (activeSource === 'youtube') {
+            const savedUrl = localStorage.getItem('musicActiveYtUrl');
+            if (savedUrl) {
+                const videoId = getYouTubeId(savedUrl);
+                if (videoId) {
+                    currentYtVideoId = videoId;
+                    initYoutubePlayer();
+                    
+                    const savedTime = localStorage.getItem('musicProgressYt');
+                    if (savedTime && parseFloat(savedTime) > 0) {
+                        pendingYtSeekTime = parseFloat(savedTime);
+                    }
+                }
+            }
+            return;
+        }
+
         const tx = db.transaction("music", "readonly");
         const store = tx.objectStore("music");
         const req = store.get("savedAudio");
@@ -474,6 +731,13 @@ function initPanelJs() {
         musicUpload.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (file) {
+                // Pause YouTube if playing
+                if (ytPlayer && isYtReady) {
+                    ytPlayer.pauseVideo();
+                }
+                activeSource = 'local';
+                localStorage.setItem('musicActiveSource', 'local');
+
                 saveMusicToDB(file); // Simpan lagu ke database lokal
                 localStorage.setItem('musicProgress', 0); // Reset progress
 
@@ -488,25 +752,36 @@ function initPanelJs() {
         });
 
         musicPlayBtn.addEventListener('click', function () {
-            if (!audioPlayer.src || audioPlayer.src === "") return;
-            initAudio();
+            if (activeSource === 'local') {
+                if (!audioPlayer.src || audioPlayer.src === "") return;
+                initAudio();
 
-            if (audioPlayer.paused) {
-                audioPlayer.play();
-                iconPlay.style.display = 'none';
-                iconPause.style.display = 'block';
-                animateVisualizer();
-            } else {
-                audioPlayer.pause();
-                iconPlay.style.display = 'block';
-                iconPause.style.display = 'none';
-                resetVisualizer();
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                    iconPlay.style.display = 'none';
+                    iconPause.style.display = 'block';
+                    animateVisualizer();
+                } else {
+                    audioPlayer.pause();
+                    iconPlay.style.display = 'block';
+                    iconPause.style.display = 'none';
+                    resetVisualizer();
+                }
+            } else if (activeSource === 'youtube') {
+                if (!ytPlayer || !isYtReady) return;
+                const state = ytPlayer.getPlayerState();
+                if (state === 1) { // playing
+                    ytPlayer.pauseVideo();
+                } else {
+                    ytPlayer.playVideo();
+                }
             }
         });
 
         let isDraggingProgress = false;
 
         audioPlayer.addEventListener('timeupdate', function () {
+            if (activeSource !== 'local') return;
             // Jangan update dari pemutar otomatis jika user sedang menggeser bar secara manual
             if (audioPlayer.duration && !isDraggingProgress) {
                 const pct = (audioPlayer.currentTime / audioPlayer.duration) * 100;
@@ -516,6 +791,7 @@ function initPanelJs() {
         });
 
         audioPlayer.addEventListener('ended', function () {
+            if (activeSource !== 'local') return;
             iconPlay.style.display = 'block';
             iconPause.style.display = 'none';
             resetVisualizer();
@@ -524,25 +800,38 @@ function initPanelJs() {
 
         // Fungsi untuk menggeser lagu sesuai posisi kursor/jari
         function updateProgress(e) {
-            if (!audioPlayer.src || !audioPlayer.duration) return;
-            const rect = musicProgressBar.getBoundingClientRect();
-            let clickX = e.clientX - rect.left;
-            // Batasi agar mentok di ujung, tidak bocor ke luar kotak
-            clickX = Math.max(0, Math.min(clickX, rect.width));
-            const pct = clickX / rect.width;
+            if (activeSource === 'local') {
+                if (!audioPlayer.src || !audioPlayer.duration) return;
+                const rect = musicProgressBar.getBoundingClientRect();
+                let clickX = e.clientX - rect.left;
+                clickX = Math.max(0, Math.min(clickX, rect.width));
+                const pct = clickX / rect.width;
 
-            audioPlayer.currentTime = pct * audioPlayer.duration;
-            musicProgressFill.style.width = (pct * 100) + '%';
-            localStorage.setItem('musicProgress', audioPlayer.currentTime); // Simpan progress setelah digeser
+                audioPlayer.currentTime = pct * audioPlayer.duration;
+                musicProgressFill.style.width = (pct * 100) + '%';
+                localStorage.setItem('musicProgress', audioPlayer.currentTime);
+            } else if (activeSource === 'youtube') {
+                if (!ytPlayer || !isYtReady) return;
+                const duration = ytPlayer.getDuration();
+                if (!duration) return;
+                const rect = musicProgressBar.getBoundingClientRect();
+                let clickX = e.clientX - rect.left;
+                clickX = Math.max(0, Math.min(clickX, rect.width));
+                const pct = clickX / rect.width;
+
+                const seekToSeconds = pct * duration;
+                ytPlayer.seekTo(seekToSeconds, true);
+                musicProgressFill.style.width = (pct * 100) + '%';
+                localStorage.setItem('musicProgressYt', seekToSeconds);
+            }
         }
 
         // Pointer events bekerja baik untuk Mouse maupun Layar Sentuh (Mobile)
         musicProgressBar.addEventListener('pointerdown', function (e) {
             isDraggingProgress = true;
-            // Mengunci kursor pada elemen ini sehingga drag tetap berfungsi walau kursor keluar bar
             musicProgressBar.setPointerCapture(e.pointerId);
             updateProgress(e);
-            e.preventDefault(); // Mencegah browser melakukan native drag-and-drop
+            e.preventDefault();
         });
 
         musicProgressBar.addEventListener('pointermove', function (e) {
@@ -556,22 +845,23 @@ function initPanelJs() {
             musicProgressBar.releasePointerCapture(e.pointerId);
         });
 
-        // Mencegah status drag "tersangkut" jika aksi dibatalkan oleh sistem (misal: notifikasi masuk)
         musicProgressBar.addEventListener('pointercancel', function (e) {
             isDraggingProgress = false;
             musicProgressBar.releasePointerCapture(e.pointerId);
         });
     }
-    // Hero Wallpaper Scroller
+    // Hero Wallpaper Scroller (Static) + Ad Overlay Cycling
     const heroDots = document.querySelectorAll('.hero-dot');
     const heroCard = document.querySelector('.hero-card');
     const bg1 = document.getElementById('heroBg1');
     const bg2 = document.getElementById('heroBg2');
+    const bg3 = document.getElementById('heroBg3'); // Ad overlay layer
     
     if (heroDots.length > 0 && heroCard) {
         let currentBgIndex = 0;
         let activeBgLayer = 1;
 
+        // ===== Wallpaper (Static, User-controlled) =====
         function setHeroBackground(index, isInitial = false) {
             heroDots.forEach(d => d.classList.remove('active'));
             heroDots[index].classList.add('active');
@@ -602,16 +892,15 @@ function initPanelJs() {
                 }
             }
             currentBgIndex = index;
-            // Save to localStorage so it persists on refresh
             localStorage.setItem('heroBgIndex', index);
         }
 
-        // Initialize from localStorage
+        // Initialize wallpaper from localStorage
         const savedIndex = localStorage.getItem('heroBgIndex');
         if (savedIndex !== null && !isNaN(savedIndex) && savedIndex >= 0 && savedIndex < heroDots.length) {
             setHeroBackground(parseInt(savedIndex), true);
         } else {
-            setHeroBackground(0, true); // Default
+            setHeroBackground(0, true);
         }
 
         heroDots.forEach((dot, index) => {
@@ -620,7 +909,83 @@ function initPanelJs() {
             });
         });
 
-        // Swipe & Drag Support
+        // ===== Ad Overlay Cycling =====
+        const adImages = window.__heroAdImages || [];
+        let currentAdIndex = 0;
+        let adTimer = null;
+        let isAdVisible = false;
+
+        const heroOverlay = heroCard.querySelector('.hero-overlay');
+
+        function showAd(index) {
+            if (!bg3 || adImages.length === 0) return;
+            bg3.style.backgroundImage = `url('${adImages[index]}')`;
+            bg3.style.opacity = '1';
+            isAdVisible = true;
+            
+            // Fade out wallpaper layers
+            if (bg1) bg1.style.opacity = '0';
+            if (bg2) bg2.style.opacity = '0';
+
+            // Hide overlay content for clean ad display
+            if (heroOverlay) {
+                heroOverlay.style.transition = 'opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                heroOverlay.style.opacity = '0';
+                heroOverlay.style.pointerEvents = 'none';
+            }
+        }
+
+        function hideAd() {
+            if (!bg3) return;
+            bg3.style.opacity = '0';
+            isAdVisible = false;
+            
+            // Restore wallpaper layers opacity based on active layer
+            if (bg1 && bg2) {
+                if (activeBgLayer === 1) {
+                    bg1.style.opacity = '1';
+                    bg2.style.opacity = '0';
+                } else {
+                    bg2.style.opacity = '1';
+                    bg1.style.opacity = '0';
+                }
+            }
+
+            // Restore overlay content
+            if (heroOverlay) {
+                heroOverlay.style.opacity = '1';
+                heroOverlay.style.pointerEvents = '';
+            }
+        }
+
+        function startAdCycle() {
+            if (adImages.length === 0) return;
+            // Show first ad after 10s, then cycle
+            adTimer = setInterval(function() {
+                if (isAdVisible) {
+                    // Currently showing ad -> fade out back to wallpaper
+                    hideAd();
+                    // Move to next ad for the next show
+                    currentAdIndex = (currentAdIndex + 1) % adImages.length;
+                } else {
+                    // Currently showing wallpaper -> fade in ad
+                    showAd(currentAdIndex);
+                }
+            }, 10000);
+        }
+
+        function resetAdCycle() {
+            // On manual wallpaper interaction, hide ad and restart cycle
+            if (adTimer) clearInterval(adTimer);
+            hideAd();
+            currentAdIndex = 0;
+            startAdCycle();
+        }
+
+        // Start ad cycling on load
+        startAdCycle();
+
+        // ===== Swipe & Drag Support =====
         let startX = 0;
         let isDraggingHero = false;
 
@@ -634,15 +999,14 @@ function initPanelJs() {
             const currentX = e.touches[0].clientX;
             const diffX = startX - currentX;
 
-            if (Math.abs(diffX) > 50) { // swipe threshold
+            if (Math.abs(diffX) > 50) {
                 if (diffX > 0) {
-                    // swiped left (next)
                     if (currentBgIndex < heroDots.length - 1) setHeroBackground(currentBgIndex + 1);
                 } else {
-                    // swiped right (prev)
                     if (currentBgIndex > 0) setHeroBackground(currentBgIndex - 1);
                 }
-                isDraggingHero = false; // Prevent multiple triggers in one swipe
+                isDraggingHero = false;
+                resetAdCycle();
             }
         }, {passive: true});
 
@@ -650,7 +1014,6 @@ function initPanelJs() {
             isDraggingHero = false;
         });
 
-        // For Mouse Drag
         heroCard.addEventListener('mousedown', e => {
             startX = e.clientX;
             isDraggingHero = true;
@@ -667,7 +1030,8 @@ function initPanelJs() {
                 } else {
                     if (currentBgIndex > 0) setHeroBackground(currentBgIndex - 1);
                 }
-                isDraggingHero = false; 
+                isDraggingHero = false;
+                resetAdCycle();
             }
         });
 
@@ -1636,6 +2000,9 @@ if (!window.panelTurboBound) {
 
     document.addEventListener('turbo:load', function () {
         if (typeof initPanelJs === 'function') initPanelJs();
+    });
+    document.addEventListener('turbo:before-visit', function () {
+        document.body.classList.remove('no-scroll');
     });
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {

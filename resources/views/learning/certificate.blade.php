@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,10 +16,12 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="toolbar">
-        <a href="{{ route('courses.show', [$submateri->course->id, 'submateri_id' => $submateri->id]) }}" class="btn-action btn-back">
+        <a href="{{ route('courses.show', [$submateri->course->id, 'submateri_id' => $submateri->id]) }}"
+            class="btn-action btn-back">
             <i class='bx bx-arrow-back'></i> Kembali
         </a>
         <button onclick="window.print()" class="btn-action">
@@ -28,7 +31,7 @@
 
     <div class="certificate-wrapper">
         <div class="certificate-inner">
-            
+
             <div class="certificate-content">
                 <div class="brand">
                     <div class="brand-emblem">tc</div>
@@ -43,7 +46,7 @@
                 <div class="cert-recipient">{{ $user->name }}</div>
 
                 <div class="cert-description">
-                    Telah sukses menyelesaikan materi dan lulus uji pemahaman secara penuh pada bagian 
+                    Telah sukses menyelesaikan materi dan lulus uji pemahaman secara penuh pada bagian
                     <strong>{{ $submateri->title }}</strong> di program spesialisasi kelas {{ $courseTitle }}.
                 </div>
 
@@ -68,68 +71,123 @@
                 </div>
             </div>
 
-            <!-- Geometric Shapes Background (Right Column) -->
+            <!-- Geometric Shapes Background (Right Column) - Bauhaus Style -->
             <div class="certificate-patterns">
                 <svg width="100%" height="100%" viewBox="0 0 500 793" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Outer Grid Border -->
+                    <rect x="30" y="66.5" width="440" height="660" stroke="var(--navy)" stroke-width="2" fill="none" />
 
-                    <!-- ===== ROW 1: Top Zone (y: 40–200) ===== -->
-                    <!-- Olive vertical pill -->
-                    <rect x="60" y="50" width="60" height="120" rx="30" stroke="var(--olive)" stroke-width="20" />
-                    <!-- Coral arc bridging from pill -->
-                    <path d="M 150,120 A 35,35 0 0,1 220,120" stroke="var(--coral)" stroke-width="20" stroke-linecap="round" />
-                    <!-- Navy dot pair -->
-                    <circle cx="280" cy="70" r="7" fill="var(--navy)" />
-                    <circle cx="280" cy="100" r="7" fill="var(--navy)" />
-                    <!-- Mint U-curve top right -->
-                    <path d="M 320,60 L 320,130 A 35,35 0 0,0 390,130 L 390,60" stroke="var(--mint)" stroke-width="20" stroke-linecap="round" />
-                    <!-- Navy L-hook far right -->
-                    <path d="M 440,60 L 440,110 A 25,25 0 0,1 415,135" stroke="var(--navy)" stroke-width="20" stroke-linecap="round" />
+                    <!-- Internal Grid Lines -->
+                    <!-- Vertical Lines -->
+                    <line x1="140" y1="66.5" x2="140" y2="726.5" stroke="var(--navy)" stroke-width="2" />
+                    <line x1="250" y1="66.5" x2="250" y2="726.5" stroke="var(--navy)" stroke-width="2" />
+                    <line x1="360" y1="66.5" x2="360" y2="726.5" stroke="var(--navy)" stroke-width="2" />
 
-                    <!-- ===== ROW 2: Upper-Mid Zone (y: 220–360) ===== -->
-                    <!-- Coral horizontal pill -->
-                    <rect x="50" y="240" width="120" height="55" rx="27" stroke="var(--coral)" stroke-width="20" />
-                    <!-- Olive arc below pill -->
-                    <path d="M 200,280 A 30,30 0 0,0 260,280" stroke="var(--olive)" stroke-width="20" stroke-linecap="round" />
-                    <!-- Navy solid circle -->
-                    <circle cx="340" cy="260" r="28" fill="var(--navy)" />
-                    <!-- Mint vertical pill far right -->
-                    <rect x="400" y="220" width="55" height="110" rx="27" stroke="var(--mint)" stroke-width="20" />
+                    <!-- Horizontal Lines -->
+                    <line x1="30" y1="176.5" x2="470" y2="176.5" stroke="var(--navy)" stroke-width="2" />
+                    <line x1="30" y1="286.5" x2="470" y2="286.5" stroke="var(--navy)" stroke-width="2" />
+                    <line x1="30" y1="396.5" x2="470" y2="396.5" stroke="var(--navy)" stroke-width="2" />
+                    <line x1="30" y1="506.5" x2="470" y2="506.5" stroke="var(--navy)" stroke-width="2" />
+                    <line x1="30" y1="616.5" x2="470" y2="616.5" stroke="var(--navy)" stroke-width="2" />
 
-                    <!-- ===== ROW 3: Center Zone (y: 380–510) ===== -->
-                    <!-- Mint wave connector -->
-                    <path d="M 80,400 L 130,400 A 30,30 0 0,1 160,430 L 160,490" stroke="var(--mint)" stroke-width="20" stroke-linecap="round" />
-                    <!-- Coral S-curve -->
-                    <path d="M 230,390 L 230,440 A 30,30 0 0,0 260,470 L 340,470" stroke="var(--coral)" stroke-width="20" stroke-linecap="round" />
-                    <!-- Olive vertical pill right -->
-                    <rect x="390" y="380" width="55" height="110" rx="27" stroke="var(--olive)" stroke-width="20" />
-                    <!-- Navy dot accent -->
-                    <circle cx="350" cy="400" r="7" fill="var(--navy)" />
+                    <!-- Geometric Shapes -->
+                    <!-- Column 1 -->
+                    <!-- Row 1: Vertical Lens -->
+                    <path d="M 30 66.5 A 55 55 0 0 1 30 176.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 140 66.5 A 55 55 0 0 0 140 176.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 2: Horizontal Lens -->
+                    <path d="M 30 176.5 A 55 55 0 0 0 140 176.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 30 286.5 A 55 55 0 0 1 140 286.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 3: Vertical Lens -->
+                    <path d="M 30 286.5 A 55 55 0 0 1 30 396.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 140 286.5 A 55 55 0 0 0 140 396.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 4: Horizontal Lens -->
+                    <path d="M 30 396.5 A 55 55 0 0 0 140 396.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 30 506.5 A 55 55 0 0 1 140 506.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 5: Vertical Lens -->
+                    <path d="M 30 506.5 A 55 55 0 0 1 30 616.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 140 506.5 A 55 55 0 0 0 140 616.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 6: Circle -->
+                    <circle cx="85" cy="671.5" r="55" stroke="var(--navy)" stroke-width="2" fill="none" />
 
-                    <!-- ===== ROW 4: Lower-Mid Zone (y: 540–650) ===== -->
-                    <!-- Navy U-curve inverted -->
-                    <path d="M 60,560 A 40,40 0 0,1 140,560" stroke="var(--navy)" stroke-width="20" stroke-linecap="round" />
-                    <!-- Coral vertical pill -->
-                    <rect x="200" y="540" width="55" height="100" rx="27" stroke="var(--coral)" stroke-width="20" />
-                    <!-- Olive arc -->
-                    <path d="M 310,600 A 35,35 0 0,0 380,600" stroke="var(--olive)" stroke-width="20" stroke-linecap="round" />
-                    <!-- Mint L-hook -->
-                    <path d="M 430,540 L 430,600 A 25,25 0 0,1 405,625" stroke="var(--mint)" stroke-width="20" stroke-linecap="round" />
+                    <!-- Column 2 -->
+                    <!-- Row 1: Horizontal Lens -->
+                    <path d="M 140 66.5 A 55 55 0 0 0 250 66.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 140 176.5 A 55 55 0 0 1 250 176.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 2: Circle -->
+                    <circle cx="195" cy="231.5" r="55" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 3: Circle -->
+                    <circle cx="195" cy="341.5" r="55" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 4: Horizontal Lens -->
+                    <path d="M 140 396.5 A 55 55 0 0 0 250 396.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 140 506.5 A 55 55 0 0 1 250 506.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 5: Horizontal Lens -->
+                    <path d="M 140 506.5 A 55 55 0 0 0 250 506.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 140 616.5 A 55 55 0 0 1 250 616.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 6: Horizontal Lens -->
+                    <path d="M 140 616.5 A 55 55 0 0 0 250 616.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 140 726.5 A 55 55 0 0 1 250 726.5" stroke="var(--navy)" stroke-width="2" fill="none" />
 
-                    <!-- ===== ROW 5: Bottom Zone (y: 670–760) ===== -->
-                    <!-- Olive horizontal pill -->
-                    <rect x="60" y="690" width="110" height="50" rx="25" stroke="var(--olive)" stroke-width="20" />
-                    <!-- Mint arc bottom center -->
-                    <path d="M 220,720 A 35,35 0 0,1 290,720" stroke="var(--mint)" stroke-width="20" stroke-linecap="round" />
-                    <!-- Coral dot -->
-                    <circle cx="340" cy="720" r="7" fill="var(--coral)" />
-                    <!-- Navy solid circle bottom right -->
-                    <circle cx="430" cy="720" r="35" fill="var(--navy)" />
+                    <!-- Column 3 -->
+                    <!-- Row 1: Horizontal Lens -->
+                    <path d="M 250 66.5 A 55 55 0 0 0 360 66.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 250 176.5 A 55 55 0 0 1 360 176.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 2: Vertical Lens -->
+                    <path d="M 250 176.5 A 55 55 0 0 1 250 286.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 360 176.5 A 55 55 0 0 0 360 286.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 3: Vertical Lens -->
+                    <path d="M 250 286.5 A 55 55 0 0 1 250 396.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 360 286.5 A 55 55 0 0 0 360 396.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 4: Circle -->
+                    <circle cx="305" cy="451.5" r="55" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 5: Circle -->
+                    <circle cx="305" cy="561.5" r="55" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 6: Vertical Lens + bottom curve -->
+                    <path d="M 250 616.5 A 55 55 0 0 1 250 726.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 360 616.5 A 55 55 0 0 0 360 726.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 250 726.5 A 55 55 0 0 1 360 726.5" stroke="var(--navy)" stroke-width="2" fill="none" />
 
+                    <!-- Column 4 -->
+                    <!-- Row 1: Vertical Lens -->
+                    <path d="M 360 66.5 A 55 55 0 0 1 360 176.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 470 66.5 A 55 55 0 0 0 470 176.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 2: Horizontal Lens -->
+                    <path d="M 360 176.5 A 55 55 0 0 0 470 176.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 360 286.5 A 55 55 0 0 1 470 286.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 3: Vertical Lens -->
+                    <path d="M 360 286.5 A 55 55 0 0 1 360 396.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 470 286.5 A 55 55 0 0 0 470 396.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 4: Horizontal Lens -->
+                    <path d="M 360 396.5 A 55 55 0 0 0 470 396.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 360 506.5 A 55 55 0 0 1 470 506.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 5: Vertical Lens -->
+                    <path d="M 360 506.5 A 55 55 0 0 1 360 616.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 470 506.5 A 55 55 0 0 0 470 616.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <!-- Row 6: Vertical Lens + bottom curve -->
+                    <path d="M 360 616.5 A 55 55 0 0 1 360 726.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 470 616.5 A 55 55 0 0 0 470 726.5" stroke="var(--navy)" stroke-width="2" fill="none" />
+                    <path d="M 360 726.5 A 55 55 0 0 1 470 726.5" stroke="var(--navy)" stroke-width="2" fill="none" />
                 </svg>
+
+                <!-- Unique QR Verification Card -->
+                <div class="cert-qr-container">
+                    <div class="cert-qr-code">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode(url()->current()) }}&color=0c2340&bgcolor=faf8f5"
+                            alt="QR Verification">
+                    </div>
+                    <div class="cert-qr-info">
+                        <span class="cert-qr-label">Verifikasi</span>
+                        <p class="cert-qr-desc">Scan untuk memverifikasi keaslian sertifikat ini.</p>
+                        <div class="cert-qr-id">ID:
+                            TC-SUB-{{ strtoupper(substr(md5($user->id . $completionDate->timestamp . $submateri->id), 0, 8)) }}
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </div>
     </div>
 
 </body>
+
 </html>

@@ -24,7 +24,8 @@ body {
 /* Toolbar */
 .toolbar {
     width: 100%;
-    max-width: 1122px; /* A4 Landscape width */
+    max-width: 1122px;
+    /* A4 Landscape width */
     display: flex;
     justify-content: flex-end;
     margin-bottom: 2rem;
@@ -243,6 +244,11 @@ body {
     z-index: 2;
 }
 
+.certificate-patterns svg {
+    opacity: 0.15;
+    /* Soft, faded background lines */
+}
+
 /* Shape Helpers */
 .shape {
     position: absolute;
@@ -334,12 +340,86 @@ body {
     border-top: 0;
 }
 
+/* Unique QR Code Container */
+.cert-qr-container {
+    position: absolute;
+    left: 28%;
+    right: 6%;
+    top: 77.74%;
+    bottom: 8.38%;
+    background: rgba(250, 248, 245, 0.7);
+    /* Translucent cream */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid #121214;
+    border-radius: 0;
+    padding: 5px 10px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-sizing: border-box;
+    z-index: 10;
+    overflow: hidden;
+}
+
+.cert-qr-code {
+    width: 85px;
+    height: 85px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cert-qr-code img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.cert-qr-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: left;
+    height: 100%;
+}
+
+.cert-qr-label {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--navy);
+    letter-spacing: -0.2px;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.cert-qr-desc {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    line-height: 1.25;
+    margin: 4px 0;
+}
+
+.cert-qr-id {
+    font-family: 'Space Grotesk', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--navy);
+    background: rgba(12, 35, 64, 0.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+    width: fit-content;
+    line-height: 1;
+}
+
 /* Print Styles */
 @media print {
     @page {
         size: A4 landscape;
         margin: 0;
     }
+
     body {
         background: #fff;
         padding: 0;
@@ -347,9 +427,11 @@ body {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
+
     .toolbar {
         display: none;
     }
+
     .certificate-wrapper {
         width: 297mm;
         height: 210mm;

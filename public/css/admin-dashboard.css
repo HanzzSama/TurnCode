@@ -810,6 +810,7 @@
             color: var(--text-color);
             padding: 8px 12px;
             border-radius: 8px;
+            white-space: nowrap;
             cursor: pointer;
             font-size: 12.5px;
             font-weight: 700;
@@ -1759,6 +1760,25 @@
             line-height: 1.7;
             font-family: inherit;
         }
+
+        /* Distinct formatting colors inside admin editor sheets */
+        .doc-sheet-container b,
+        .doc-sheet-container strong {
+            color: #c084fc !important;
+            /* purple/violet for bold */
+        }
+
+        .doc-sheet-container i,
+        .doc-sheet-container em {
+            color: #34d399 !important;
+            /* emerald green for italic */
+        }
+
+        .doc-sheet-container u {
+            color: #f59e0b !important;
+            /* amber/orange for underline */
+        }
+
 
         .doc-block-content.h2-block {
             font-size: 18px;
@@ -2742,7 +2762,8 @@
             position: absolute;
             left: 4px;
             top: 4px;
-            height: 46px; /* 56px container height - 8px padding/borders - 2px safety */
+            height: 46px;
+            /* 56px container height - 8px padding/borders - 2px safety */
             width: 90px;
             background: #756885;
             border-radius: 50px;

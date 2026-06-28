@@ -237,6 +237,8 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
 
     Route::get('/courses/{course}', [LearningController::class, 'showCourse'])->name('courses.show');
     Route::get('/lessons/{lesson}', [LearningController::class, 'showLesson'])->name('lessons.show');
+    Route::post('/lessons/{lesson}/discussions', [\App\Http\Controllers\LessonDiscussionController::class, 'store'])->name('lessons.discussions.store');
+    Route::post('/discussions/{discussion}/like', [\App\Http\Controllers\LessonDiscussionController::class, 'toggleLike'])->name('discussions.like');
     Route::post('/lessons/{lesson}/complete', [LearningController::class, 'completeLesson'])->name('lessons.complete');
     Route::get('/submateris/{submateri}/quiz', [LearningController::class, 'showSubmateriQuiz'])->name('submateris.quiz.show');
     Route::post('/submateris/{submateri}/quiz', [LearningController::class, 'submitSubmateriQuiz'])->name('submateris.quiz.submit');

@@ -141,7 +141,13 @@ class LearningController extends Controller
             $nextLesson = $submateriLessons[$currentIndex + 1];
         }
 
-        return view('learning.lesson', compact('lesson', 'course', 'submateris', 'completedLessons', 'nextLesson'));
+        $discussions = $lesson->discussions()
+            ->whereNull('parent_id')
+            ->with(['user', 'replies.user'])
+            ->latest()
+            ->get();
+
+        return view('learning.lesson', compact('lesson', 'course', 'submateris', 'completedLessons', 'nextLesson', 'discussions'));
     }
 
     public function showSubmateriQuiz(Submateri $submateri)

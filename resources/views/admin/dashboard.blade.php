@@ -541,11 +541,7 @@
                                                     data-id="{{ $int->id }}" data-name="{{ $int->name }}"
                                                     data-desc="{{ $int->desc }}" data-icon="{{ $int->icon }}"
                                                     onclick="setInterestEditMode(
-                                                                                                                                                                                                                                this.getAttribute('data-id'),
-                                                                                                                                                                                                                                this.getAttribute('data-name'),
-                                                                                                                                                                                                                                this.getAttribute('data-desc'),
-                                                                                                                                                                                                                                this.getAttribute('data-icon')
-                                                                                                                                                                                                                            )">Edit</button>
+                                                                                                                                                                                                                                                                )">Edit</button>
                                                 <form action="{{ route('admin.interests.delete', $int->id) }}" method="POST"
                                                     data-confirm-message="Hapus interest {{ addslashes($int->name) }}?"
                                                     data-confirm-btn="Hapus Interest">
@@ -679,13 +675,13 @@
                                                     data-name="{{ $fk->name }}" data-desc="{{ $fk->desc }}"
                                                     data-icon="{{ $fk->icon }}" data-tags="{{ $fk->tags }}"
                                                     onclick="setFokusEditMode(
-                                                                                                                                                                                                                                this.getAttribute('data-id'),
-                                                                                                                                                                                                                                this.getAttribute('data-interest-val'),
-                                                                                                                                                                                                                                this.getAttribute('data-name'),
-                                                                                                                                                                                                                                this.getAttribute('data-desc'),
-                                                                                                                                                                                                                                this.getAttribute('data-icon'),
-                                                                                                                                                                                                                                this.getAttribute('data-tags')
-                                                                                                                                                                                                                            )">Edit</button>
+                                                                                                                                                                                                                                                                    this.getAttribute('data-id'),
+                                                                                                                                                                                                                                                                    this.getAttribute('data-interest-val'),
+                                                                                                                                                                                                                                                                    this.getAttribute('data-name'),
+                                                                                                                                                                                                                                                                    this.getAttribute('data-desc'),
+                                                                                                                                                                                                                                                                    this.getAttribute('data-icon'),
+                                                                                                                                                                                                                                                                    this.getAttribute('data-tags')
+                                                                                                                                                                                                                                                                )">Edit</button>
                                                 <form action="{{ route('admin.fokus.delete', $fk->id) }}" method="POST"
                                                     data-confirm-message="Hapus fokus {{ addslashes($fk->name) }}?"
                                                     data-confirm-btn="Hapus Fokus">
@@ -788,19 +784,23 @@
                                     <!-- Word-like Toolbar -->
                                     <div class="doc-toolbar">
                                         <!-- History -->
-                                        <button type="button" class="doc-toolbar-btn" onclick="formatDoc('undo')"
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onmousedown="event.preventDefault()" onclick="formatDoc('undo')"
                                             title="Undo (Ctrl+Z)">↶</button>
-                                        <button type="button" class="doc-toolbar-btn" onclick="formatDoc('redo')"
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onmousedown="event.preventDefault()" onclick="formatDoc('redo')"
                                             title="Redo (Ctrl+Y)">↷</button>
                                         <div class="doc-toolbar-divider"></div>
                                         <!-- Styling -->
                                         <button type="button" class="doc-toolbar-btn" style="font-weight: bold;"
-                                            onclick="formatDoc('bold')" title="Tebal (Ctrl+B)">B</button>
+                                            onmousedown="event.preventDefault()" onclick="formatDoc('bold')"
+                                            title="Tebal (Ctrl+B)">B</button>
                                         <button type="button" class="doc-toolbar-btn" style="font-style: italic;"
-                                            onclick="formatDoc('italic')" title="Miring (Ctrl+I)">I</button>
+                                            onmousedown="event.preventDefault()" onclick="formatDoc('italic')"
+                                            title="Miring (Ctrl+I)">I</button>
                                         <button type="button" class="doc-toolbar-btn"
-                                            style="text-decoration: underline;" onclick="formatDoc('underline')"
-                                            title="Garis Bawah (Ctrl+U)">U</button>
+                                            style="text-decoration: underline;" onmousedown="event.preventDefault()"
+                                            onclick="formatDoc('underline')" title="Garis Bawah (Ctrl+U)">U</button>
                                         <div class="doc-toolbar-divider"></div>
                                         <!-- Blocks -->
                                         <button type="button" class="doc-toolbar-btn"
@@ -839,7 +839,8 @@
                                         <div class="doc-toolbar-divider"></div>
                                         <!-- Clear -->
                                         <button type="button" class="doc-toolbar-btn"
-                                            onclick="formatDoc('removeFormat')" title="Hapus Format">Tx</button>
+                                            onmousedown="event.preventDefault()" onclick="formatDoc('removeFormat')"
+                                            title="Hapus Format">Tx</button>
                                         <!-- Focus Mode Toggle -->
                                         <button type="button" class="doc-toolbar-btn" id="editorFocusToggleBtn"
                                             onclick="toggleEditorFocusMode()"
@@ -941,14 +942,14 @@
                                                         data-description="{{ $sub->description }}"
                                                         data-icon="{{ $sub->icon }}" data-order="{{ $sub->order }}"
                                                         data-status="{{ $sub->status ?? 'published' }}" onclick="setSubmateriEditMode(
-                                                                        this.getAttribute('data-id'),
-                                                                        this.getAttribute('data-course-id'),
-                                                                        this.getAttribute('data-title'),
-                                                                        this.getAttribute('data-description'),
-                                                                        this.getAttribute('data-icon'),
-                                                                        this.getAttribute('data-order'),
-                                                                        this.getAttribute('data-status')
-                                                                    )">Edit</button>
+                                                                                                            this.getAttribute('data-id'),
+                                                                                                            this.getAttribute('data-course-id'),
+                                                                                                            this.getAttribute('data-title'),
+                                                                                                            this.getAttribute('data-description'),
+                                                                                                            this.getAttribute('data-icon'),
+                                                                                                            this.getAttribute('data-order'),
+                                                                                                            this.getAttribute('data-status')
+                                                                                                        )">Edit</button>
                                                     <form action="{{ route('admin.submateri.delete', $sub->id) }}"
                                                         method="POST"
                                                         data-confirm-message="Hapus submateri {{ addslashes($sub->title) }}?"
@@ -1076,15 +1077,16 @@
                                                         data-id="{{ $ch->id }}" data-submateri-id="{{ $ch->submateri_id }}"
                                                         data-title="{{ $ch->title }}" data-order="{{ $ch->order }}"
                                                         data-status="{{ $ch->status ?? 'published' }}" onclick="setChapterEditMode(
-                                                                            this.getAttribute('data-id'),
-                                                                            this.getAttribute('data-submateri-id'),
-                                                                            this.getAttribute('data-title'),
-                                                                            this.getAttribute('data-order'),
-                                                                            this.getAttribute('data-status')
-                                                                        )">Edit</button>
+                                                                this.getAttribute('data-submateri-id'),
+                                                                this.getAttribute('data-id'),
+                                                                this.getAttribute('data-title'),
+                                                                this.getAttribute('data-order'),
+                                                                this.getAttribute('data-status')
+                                                            )">Edit</button>
                                                     <button class="btn-action-outline"
                                                         style="color: #60a5fa; border-color: rgba(96, 165, 250, 0.2);"
-                                                        onclick="quickAddLesson({{ $ch->id }})">+ Halaman</button>
+                                                        onclick="quickAddLesson({{ $ch->id }})"><b
+                                                            style="margin-right: 4px;">+</b>Halaman</button>
                                                     <form action="{{ route('admin.chapters.delete', $ch->id) }}"
                                                         method="POST"
                                                         data-confirm-message="Hapus bab {{ addslashes($ch->title) }}? Semua halaman di dalamnya akan terhapus."
@@ -1154,18 +1156,22 @@
                                 <div class="document-editor">
                                     <!-- Word-like Toolbar -->
                                     <div class="doc-toolbar">
-                                        <button type="button" class="doc-toolbar-btn" onclick="formatDoc('undo')"
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onmousedown="event.preventDefault()" onclick="formatDoc('undo')"
                                             title="Undo (Ctrl+Z)">↶</button>
-                                        <button type="button" class="doc-toolbar-btn" onclick="formatDoc('redo')"
+                                        <button type="button" class="doc-toolbar-btn"
+                                            onmousedown="event.preventDefault()" onclick="formatDoc('redo')"
                                             title="Redo (Ctrl+Y)">↷</button>
                                         <div class="doc-toolbar-divider"></div>
                                         <button type="button" class="doc-toolbar-btn" style="font-weight: bold;"
-                                            onclick="formatDoc('bold')" title="Tebal (Ctrl+B)">B</button>
+                                            onmousedown="event.preventDefault()" onclick="formatDoc('bold')"
+                                            title="Tebal (Ctrl+B)">B</button>
                                         <button type="button" class="doc-toolbar-btn" style="font-style: italic;"
-                                            onclick="formatDoc('italic')" title="Miring (Ctrl+I)">I</button>
+                                            onmousedown="event.preventDefault()" onclick="formatDoc('italic')"
+                                            title="Miring (Ctrl+I)">I</button>
                                         <button type="button" class="doc-toolbar-btn"
-                                            style="text-decoration: underline;" onclick="formatDoc('underline')"
-                                            title="Garis Bawah (Ctrl+U)">U</button>
+                                            style="text-decoration: underline;" onmousedown="event.preventDefault()"
+                                            onclick="formatDoc('underline')" title="Garis Bawah (Ctrl+U)">U</button>
                                         <div class="doc-toolbar-divider"></div>
                                         <button type="button" class="doc-toolbar-btn"
                                             style="font-weight: bold; font-size:11px;" onclick="addLessonDocBlock('p')"
@@ -1201,7 +1207,8 @@
                                             style="font-size: 11px;">ⓘ Info Box</button>
                                         <div class="doc-toolbar-divider"></div>
                                         <button type="button" class="doc-toolbar-btn"
-                                            onclick="formatDoc('removeFormat')" title="Hapus Format">Tx</button>
+                                            onmousedown="event.preventDefault()" onclick="formatDoc('removeFormat')"
+                                            title="Hapus Format">Tx</button>
                                         <button type="button" class="doc-toolbar-btn" id="lessonEditorFocusToggleBtn"
                                             onclick="toggleLessonEditorFocusMode()"
                                             title="Mode Fokus (Sembunyikan Sidebar & Tabel)"
@@ -1292,14 +1299,15 @@
                                                         data-id="{{ $lsn->id }}" data-chapter-id="{{ $lsn->chapter_id }}"
                                                         data-title="{{ $lsn->title }}" data-content="{{ $lsn->content }}"
                                                         data-order="{{ $lsn->order }}"
-                                                        data-status="{{ $lsn->status ?? 'published' }}" onclick="setLessonEditMode(
-                                                                            this.getAttribute('data-id'),
-                                                                            this.getAttribute('data-chapter-id'),
-                                                                            this.getAttribute('data-title'),
-                                                                            this.getAttribute('data-content'),
-                                                                            this.getAttribute('data-order'),
-                                                                            this.getAttribute('data-status')
-                                                                        )">Edit</button>
+                                                        data-status="{{ $lsn->status ?? 'published' }}"
+                                                        onclick="setLessonEditMode(
+                                                                                                                this.getAttribute('data-id'),
+                                                                                                                this.getAttribute('data-chapter-id'),
+                                                                                                                this.getAttribute('data-title'),
+                                                                                                                this.getAttribute('data-content'),
+                                                                                                                this.getAttribute('data-order'),
+                                                                                                                this.getAttribute('data-status')
+                                                                                                            )">Edit</button>
                                                     <form action="{{ route('admin.lessons.delete', $lsn->id) }}"
                                                         method="POST"
                                                         data-confirm-message="Hapus halaman {{ addslashes($lsn->title) }}?"
@@ -1493,20 +1501,20 @@
                                                     data-explanation="{{ $qz->explanation }}" data-opta="{{ $optA }}"
                                                     data-optb="{{ $optB }}" data-optc="{{ $optC }}" data-optd="{{ $optD }}"
                                                     onclick="setQuizEditMode(
-                                                                                                                                                                                                                                                            this.getAttribute('data-id'),
-                                                                                                                                                                                                                                                            this.getAttribute('data-lesson-id'),
-                                                                                                                                                                                                                                                            this.getAttribute('data-type'),
-                                                                                                                                                                                                                                                            this.getAttribute('data-question'),
-                                                                                                                                                                                                                                                            this.getAttribute('data-image-url'),
-                                                                                                                                                                                                                                                            this.getAttribute('data-video-url'),
-                                                                                                                                                                                                                                                            this.getAttribute('data-code-block'),
-                                                                                                                                                                                                                                                            this.getAttribute('data-correct-answer'),
-                                                                                                                                                                                                                                                            this.getAttribute('data-explanation'),
-                                                                                                                                                                                                                                                            this.getAttribute('data-opta'),
-                                                                                                                                                                                                                                                            this.getAttribute('data-optb'),
-                                                                                                                                                                                                                                                            this.getAttribute('data-optc'),
-                                                                                                                                                                                                                                                            this.getAttribute('data-optd')
-                                                                                                                                                                                                                                                        )">Edit</button>
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-id'),
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-lesson-id'),
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-type'),
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-question'),
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-image-url'),
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-video-url'),
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-code-block'),
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-correct-answer'),
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-explanation'),
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-opta'),
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-optb'),
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-optc'),
+                                                                                                                                                                                                                                                                                                this.getAttribute('data-optd')
+                                                                                                                                                                                                                                                                                            )">Edit</button>
                                                 <form action="{{ route('admin.quizzes.delete', $qz->id) }}" method="POST"
                                                     data-confirm-message="Hapus soal kuis ini?"
                                                     data-confirm-btn="Hapus Soal">
@@ -3865,6 +3873,7 @@
 
         function formatDoc(command, value = null) {
             document.execCommand(command, false, value);
+            updateFormattingToolbarStates();
         }
 
         // Lessons list for quiz question block dynamic generation
@@ -4993,6 +5002,70 @@
                 }
             });
         });
+
+        // WYSIWYG Editor formatting toolbar states synchronization
+        function updateFormattingToolbarStates() {
+            const selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0) {
+                clearAllToolbarActiveStates();
+                return;
+            }
+
+            const anchorNode = selection.anchorNode;
+            if (!anchorNode) {
+                clearAllToolbarActiveStates();
+                return;
+            }
+
+            // Check if anchorNode is inside a document editor
+            const editableParent = anchorNode.nodeType === Node.ELEMENT_NODE ?
+                anchorNode.closest('[contenteditable="true"]') :
+                anchorNode.parentElement?.closest('[contenteditable="true"]');
+
+            if (!editableParent) {
+                clearAllToolbarActiveStates();
+                return;
+            }
+
+            // Find the document-editor parent
+            const docEditor = editableParent.closest('.document-editor');
+            if (!docEditor) {
+                clearAllToolbarActiveStates();
+                return;
+            }
+
+            // Update toolbar active states for this editor
+            const toolbar = docEditor.querySelector('.doc-toolbar');
+            if (toolbar) {
+                const boldBtn = Array.from(toolbar.querySelectorAll('.doc-toolbar-btn')).find(btn => btn.getAttribute('onclick')?.includes("'bold'"));
+                const italicBtn = Array.from(toolbar.querySelectorAll('.doc-toolbar-btn')).find(btn => btn.getAttribute('onclick')?.includes("'italic'"));
+                const underlineBtn = Array.from(toolbar.querySelectorAll('.doc-toolbar-btn')).find(btn => btn.getAttribute('onclick')?.includes("'underline'"));
+
+                if (boldBtn) {
+                    boldBtn.classList.toggle('active', document.queryCommandState('bold'));
+                }
+                if (italicBtn) {
+                    italicBtn.classList.toggle('active', document.queryCommandState('italic'));
+                }
+                if (underlineBtn) {
+                    underlineBtn.classList.toggle('active', document.queryCommandState('underline'));
+                }
+            }
+        }
+
+        function clearAllToolbarActiveStates() {
+            document.querySelectorAll('.document-editor .doc-toolbar .doc-toolbar-btn').forEach(btn => {
+                const onclickAttr = btn.getAttribute('onclick') || '';
+                if (onclickAttr.includes("'bold'") || onclickAttr.includes("'italic'") || onclickAttr.includes("'underline'")) {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Listen to selection changes and key/mouse events to update state
+        document.addEventListener('selectionchange', updateFormattingToolbarStates);
+        document.addEventListener('keyup', updateFormattingToolbarStates);
+        document.addEventListener('mouseup', updateFormattingToolbarStates);
     </script>
 
     <!-- CUSTOM CONFIRM MODAL -->
